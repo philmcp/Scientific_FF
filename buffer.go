@@ -16,7 +16,7 @@ var TWITTER_ID = "56ecc333af31d34b34166e6d"
 
 // Access Buffer.com REST API
 func postToBuffer() {
-	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", season, gameWeek, DKID)
+	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", SEASON, WEEK, DKID)
 	encImage, _ := url.Parse(image)
 	fmt.Println(encImage.String())
 
@@ -29,9 +29,9 @@ func postToBuffer() {
 	text = append(text, "Here is our #AI selected #GW%d #DraftKings lineup - Good luck!")
 	text = append(text, "Our algorithm driven #EPL #DraftKings lineups for #GW%d is here! Good luck!")
 
-	sel := random(0, len(text)-1)
+	sel := Random(0, len(text)-1)
 
-	cur := fmt.Sprintf(text[sel], gameWeek)
+	cur := fmt.Sprintf(text[sel], WEEK)
 	fmt.Println(cur)
 	encText, _ := url.Parse(cur)
 	fmt.Println(encText.String())

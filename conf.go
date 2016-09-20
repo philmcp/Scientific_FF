@@ -6,17 +6,6 @@ import (
 	"os"
 )
 
-type Configuration struct {
-	Database struct {
-		Host     string
-		Port     int
-		DB       string
-		User     string
-		Password string
-	}
-	FFPassword string
-}
-
 // Load a JSON configuration file which matches the format of the Configuration
 // struct. Initiate a new Client using the details porvided.
 func LoadConfig(filepath string, conf interface{}) (err error) {

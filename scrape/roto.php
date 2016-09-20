@@ -188,12 +188,8 @@ $week_temp = explode("/",$full_folder);
 $week = $week_temp[2];
 
 $url = 'http://www.rotowire.com/soccer/soccer-lineups.htm?league=EPL&week='.$week;
-echo "Getting $url\n";
-
 $players_csv = $full_folder.'roto-players.csv';
 $matches_csv = $full_folder.'roto-matches.csv';
-
-echo "Writing to $players_csv\n";
 
 
 // true = o/p array, false = does not o/p

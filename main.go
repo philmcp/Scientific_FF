@@ -9,24 +9,21 @@ import (
 
 // Fantasy football Team Selection - Parameters
 var (
-	season   = 2016
-	gameWeek = 6
-	DKID     = 10921
-	DKName   = "18/9 12:00pm"
+	SEASON = 2016
+	WEEK   = 5
+	DKID   = 10920
+	DKNAME = "18/9 12:00pm"
 
 	conf = &Configuration{}
 
 	db *DB
 
-	inputFolder  = fmt.Sprintf("input/%d/%d/", season, gameWeek)
-	outputFolder = fmt.Sprintf("output/%d/%d/", season, gameWeek)
+	inputFolder  = fmt.Sprintf("input/%d/%d/", SEASON, WEEK)
+	outputFolder = fmt.Sprintf("output/%d/%d/", SEASON, WEEK)
 
-	league    = League{Teams: map[string]Team{}}
 	formation = map[string]int{"gk": 1, "d": 2, "m": 2, "f": 2, "u": 1}
 
-	highestValue     = 0.0
-	highestValueWage = 0.0
-	highestValueTeam = []Player{}
+	BEST = BestLineup{Wage: 0, Projection: 0}
 
 	iter          = 0
 	start         = time.Now().UnixNano()
@@ -37,7 +34,7 @@ var (
 
 	minNumTeams = 3
 
-	maxWage = 50000.0
+	MAX_WAGE = 50000.0
 
 	// 'Source' -> 'Team' -> 'From' -> 'To'
 	rename = map[string]map[string]map[string]string{}
@@ -50,7 +47,7 @@ var (
 // 			Upload code to github
 
 func main() {
-	fmt.Printf("Running for Week: %d Season: %d Game: %d\n", gameWeek, season, DKID)
+	fmt.Printf("Running for Week: %d Season: %d Game: %d\n", WEEK, SEASON, DKID)
 	time.Sleep(time.Second * 1)
 	runtime.GOMAXPROCS(12)
 
@@ -61,47 +58,41 @@ func main() {
 
 	db = Connect(conf.Database.Host, conf.Database.Port, conf.Database.DB, conf.Database.User, conf.Database.Password)
 
-	leagueFFS, leagueDK, leaguePL, leagueFFSP := loadData()
-	getBestLineup(leagueFFS, leagueDK, leaguePL, leagueFFSP)
-	postToBuffer()
+	pool := loadData()
+	pool.getBestLineup()
+	//postToBuffer()
 
 }
 
-// Load all data
-func loadData() (leagueFFS League, leagueDK League, leaguePL League, leagueFFSP League) {
-	// Scrape the data first
+// Scrape the data and loads it into the database
+func loadData() PlayerPool {
 	scrapeFFS()
 	scrapeDK()
 	scrapeRoto()
 
-	// Fantasy Football Scout Data
+	// FFS
 	fileFFS := inputFolder + "ffs-" + fmt.Sprintf("%d", DKID) + ".csv"
 	csvFFS := loadCSV(fileFFS)
-	db.parseFFSDB(&csvFFS)
-	leagueFFS = csvFFS.parseFFS()
+	db.loadFFS(&csvFFS)
 
-	// Draft Kings Data
+	// DK
 	fileDK := inputFolder + "dk-" + fmt.Sprintf("%d", DKID) + ".csv"
 	csvDK := loadCSV(fileDK)
-	db.parseDKDB(&csvDK)
-	leagueDK = csvDK.parseDK()
-	//	leagueDK.print()
+	db.loadDK(&csvDK)
 
-	// Roto players
+	// Roto
 	fileRotoP := inputFolder + "roto-players.csv"
-	fmt.Println(fileRotoP)
 	csvRotoP := loadCSV(fileRotoP)
-	db.parseRotoPlayersDB(&csvRotoP)
+	db.loadRoto(&csvRotoP)
 
-	return leagueFFS, leagueDK, leaguePL, leagueFFSP
+	return db.getPlayers()
 }
 
-func getBestLineup(leagueFFS League, leagueDK League, leaguePL League, leagueFFSP League) {
+func (pool *PlayerPool) getBestLineup() {
 
-	leagueDK.combine(&leagueFFS, &leaguePL, &leagueFFSP)
 	//	Spawn some threads to select random team combinations
 	for k := 0.0; k < (threads * 2.0); k++ {
-		go thread(&leagueDK, formation, minValueStart+(k*valueJump))
+		go thread(pool, minValueStart+(k*valueJump))
 	}
 
 	// Run for 10 mins
@@ -109,11 +100,11 @@ func getBestLineup(leagueFFS League, leagueDK League, leaguePL League, leagueFFS
 }
 
 // Thread to select random team combinations
-func thread(l *League, formation map[string]int, minValue float64) {
+func thread(pool *PlayerPool, minValue float64) {
 	fmt.Printf("Searching for lineups with a min value of %f\n", minValue)
 	i := 0
 	for {
-		l.randTeamLineup(formation, minValue)
+		pool.randTeamLineup(minValue)
 		i++
 		if i%printGap == 0 {
 			iter += i

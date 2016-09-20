@@ -1,27 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 
-	"time"
-
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 // Generate a random number
-func random(min, max int) int {
+func Random(min, max int) int {
 	//fmt.Printf("%d %d\n", min, max)
 	rand.Seed(time.Now().UnixNano())
 	ret := rand.Intn(max-min) + min
 	return ret
 }
 
-func wget(url string, to string) {
+func Wget(url string, to string) {
 	// don't worry about errors
 	response, e := http.Get(url)
 	if e != nil {
@@ -41,7 +40,6 @@ func wget(url string, to string) {
 		log.Fatal(err)
 	}
 	file.Close()
-	fmt.Println("Success!")
 }
 
 func RemoveContents(dir string) error {
@@ -61,4 +59,19 @@ func RemoveContents(dir string) error {
 		}
 	}
 	return nil
+}
+
+func ParseEncoding(str string) string {
+	str = strings.ToLower(str)
+
+	str = strings.Replace(str, "è", "e", -1)
+	str = strings.Replace(str, "á", "a", -1)
+	str = strings.Replace(str, "é", "e", -1)
+	str = strings.Replace(str, "ö", "o", -1)
+	str = strings.Replace(str, "í", "i", -1)
+	str = strings.Replace(str, "à", "a", -1)
+	str = strings.Replace(str, "ó", "o", -1)
+	str = strings.Replace(str, "ú", "u", -1)
+	str = strings.Replace(str, "ü", "u", -1)
+	return str
 }

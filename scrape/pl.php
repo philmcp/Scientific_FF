@@ -12,7 +12,8 @@ define('URL', 'http://www.premierleague.com/en-gb/matchday/matches/2015-2016/epl
 define('FILE', $argv[1].".csv");
 
 function stop($msg) {
-	die($msg."\n");
+	die();
+//	die($msg."\n");
 }
 
 $html = file_get_contents(URL);
@@ -22,9 +23,7 @@ fwrite($fp, implode(',', array('Team', 'Started', 'Name', 'EA PPI', 'FPL', 'BFR'
 
 ///HERERER
 if (strpos($html, 'Previous league match line-ups') !== FALSE) {
-	echo "Player info not ready yet";
 	fclose($fp);
-	stop("DONE");
 } else {
 
 	$teamNamePattern = '/<h3\sclass="club noborder"><a[^>]+>(.+)<\/a>/i';

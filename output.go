@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"bufio"
 	"flag"
@@ -118,7 +119,7 @@ func (t *Team) drawTeam() {
 	gamesFont.SetClip(rgba.Bounds())
 	gamesFont.SetDst(rgba)
 
-	redFont := loadFont( /*image.Uniform.RGBA(50, 50, 50, 1) */ image.White, salarySize)
+	redFont := loadFont( /*image.Uniform.RGBA(50, 50, 50, 1)  image.White, salarySize)
 	redFont.SetClip(rgba.Bounds())
 	redFont.SetDst(rgba)
 
@@ -230,3 +231,5 @@ func (t *Team) drawTeam() {
 
 	fmt.Println("Wrote out.png OK.")
 }
+
+*/

@@ -6,81 +6,85 @@ import (
 	"strings"
 )
 
-// Teams: Roto to DK
 func teamRoto2DK(name string) string {
 	teamMapping := map[string]string{
-		"TOT": "spurs",
-		"WHU": "west ham",
-		"ARS": "arsenal",
-		"BOU": "bournemouth",
-		"NOR": "norwich",
-		"NEW": "newcastle",
-		"SOU": "southampton",
-		"SWA": "swansea",
-		"CHE": "chelsea",
-		"WAT": "watford",
-		"EVE": "everton",
-		"MCI": "man city",
-		"WBA": "west brom",
-		"STK": "stoke",
-		"CRY": "crystal palace",
-		"MU":  "man utd",
-		"AVL": "aston villa",
-		"LEI": "leicester",
-		"LIV": "liverpool",
-		"SUN": "sunderland",
-		"MID": "middlesborough",
-		"HUL": "hull",
-		"BUR": "burnley",
-	}
-
-	if _, exist := teamMapping[strings.ToUpper(name)]; !exist {
-		log.Fatal("There is a problem with the mapping for " + name)
-	}
-
-	return strings.ToLower(strings.Replace(teamMapping[strings.ToUpper(name)], " ", "-", -1))
-}
-
-func teamPL2DK(name string) string {
-	teamMapping := map[string]string{
-		"spurs":          "TOT",
-		"west ham":       "WHU",
-		"arsenal":        "ARS",
-		"bournemouth":    "BOU",
-		"norwich":        "NOR",
-		"newcastle":      "NEW",
-		"southampton":    "SOU",
-		"swansea":        "SWA",
-		"chelsea":        "CHE",
-		"watford":        "WAT",
-		"everton":        "EVE",
-		"man city":       "MCI",
-		"west brom":      "WBA",
-		"stoke":          "STK",
-		"crystal palace": "CRY",
-		"man utd":        "MU",
-		"aston villa":    "AVL",
-		"leicester":      "LEI",
-		"liverpool":      "LIV",
-		"sunderland":     "SUN",
-		"burnley":        "BUR",
-		"middlesborough": "MID",
-		"hull":           "HUL",
+		"tottenham hotspur":    "TOT",
+		"west ham united":      "WHU",
+		"arsenal":              "ARS",
+		"afc bournemouth":      "BOU",
+		"norwich":              "NOR",
+		"newcastle":            "NEW",
+		"southampton":          "SOU",
+		"swansea city":         "SWA",
+		"chelsea":              "CHE",
+		"watford":              "WAT",
+		"everton":              "EVE",
+		"manchester city":      "MCI",
+		"west bromwich albion": "WBA",
+		"stoke city":           "STK",
+		"crystal palace":       "CRY",
+		"manchester united":    "MU",
+		"middlesbrough":        "MID",
+		"aston villa":          "AVL",
+		"leicester city":       "LEI",
+		"liverpool":            "LIV",
+		"sunderland":           "SUN",
+		"burnley":              "BUR",
+		"middlesborough":       "MID",
+		"hull city":            "HUL",
 	}
 
 	if _, exist := teamMapping[strings.ToLower(name)]; !exist {
-		log.Fatal("There is a problem with the mapping for " + name)
+		log.Fatal("Roto team name doesnt exist: " + name)
 	}
 
 	return strings.ToLower(teamMapping[strings.ToLower(name)])
 }
 
 func teamFFS2DK(name string) string {
-	teamMapping := map[string]string{"sto": "stk", "sot": "sou", "mun": "mu"}
+	teamMapping := map[string]string{
+		"sto": "stk",
+		"sot": "sou",
+		"whm": "whu",
+		"mun": "mu",
+		"cry": "cry",
+		"bou": "bou",
+		"ars": "ars",
+		"lei": "lei",
+		"stk": "stk",
+		"wba": "wba",
+		"mci": "mci",
+		"swa": "swa",
+		"hul": "hul",
+		"che": "che",
+		"tot": "tot",
+		"eve": "eve",
+		"liv": "liv",
+		"sun": "sun",
+		"mid": "mid",
+		"wat": "wat",
+		"bur": "bur",
+	}
 
 	if _, exist := teamMapping[name]; exist {
 		//	fmt.Println("Mapping " + name + " to " + teamMapping[name])
 		return teamMapping[name]
+	} else {
+		log.Fatal("FFS team name doesnt exist: " + name)
+		return name
+	}
+}
+
+func mapDuplicateNames(name string) string {
+	playerMapping := map[string]string{
+		"christian benteke": "Benteke",
+		"jonathan benteke":  "JBenteke",
+		"callum wilson":     "Wilson",
+		"pau l<f3>pez":      "Pau Lopez",
+	}
+
+	if _, exist := playerMapping[strings.ToLower(name)]; exist {
+		return playerMapping[strings.ToLower(name)]
 	} else {
 		return name
 	}

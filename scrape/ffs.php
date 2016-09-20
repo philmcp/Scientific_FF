@@ -9,9 +9,6 @@ $inp  = $argv[1];
 $week = explode("/", $inp);
 $week = $week[sizeof($week)-2];
 
-echo "Download data for $inp\n";
-echo "Week is $week\n";
-
 define('FOLDER', $inp);
 
 if (!is_dir(FOLDER)) {
@@ -31,7 +28,8 @@ define('USER_AGENT', 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, li
 define('COOKIE_JAR', './scrape/lib/cookiejar.txt');
 
 function stop($msg) {
-	die($msg."\n");
+	die();
+	//die($msg."\n");
 }
 
 function createCurl($url) {
