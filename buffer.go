@@ -10,9 +10,9 @@ import (
 	"net/url"
 )
 
-var ACCESS_TOKEN = "1/b2d4e41a5b77e85bb82742f8836dd240"
+var ACCESS_TOKEN = conf.Buffer.AccessToken
 var UPDATE_URL = fmt.Sprintf("https://api.bufferapp.com/1/updates/create.json?access_token=%s", ACCESS_TOKEN)
-var TWITTER_ID = "56ecc333af31d34b34166e6d"
+var TWITTER_ID = conf.Buffer.TwitterID
 
 // Access Buffer.com REST API
 func postToBuffer() {
