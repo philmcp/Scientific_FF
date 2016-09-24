@@ -15,10 +15,20 @@ type BufferAPI struct {
 	FacebookID  string
 }
 
+var (
+	lineupText = []string{"Its #DFF time! Here is our #EPL #Draftkings lineup for #GW%d",
+		"This week's #EPL #Draftkings lineup! #GW%d - Good luck all!",
+		"Here's our lineup for today's #GW%d #Draftkings #DFF",
+		"Algorithm driven #EPL #DFF lineups - here's today's #GW%d selection",
+		"...and here it is, good luck all! #EPL #DFF #DraftKings #GW%d",
+		"Here is our #AI selected #GW%d #DraftKings lineup - Good luck!",
+		"Our algorithm driven #EPL #DraftKings lineups for #GW%d is here! Good luck!"}
+)
+
 // Access Buffer.com REST API
 func (b *BufferAPI) post(text string, image string) {
 
-	text = cleanURL(text)
+	text = strings.Replace(text, "%", "", -1)
 
 	encText, err := url.Parse(text)
 	if err != nil {
@@ -41,19 +51,8 @@ func (b *BufferAPI) post(text string, image string) {
 func (b *BufferAPI) postLineup() {
 	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", conf.Season, conf.Week, conf.DKID)
 
-	text := []string{}
-	text = append(text, "Its #DFF time! Here is our #EPL #Draftkings lineup for #GW%d")
-	text = append(text, "This week's #EPL #Draftkings lineup! #GW%d - Good luck all!")
-	text = append(text, "Here's our lineup for today's #GW%d #Draftkings #DFF")
-	text = append(text, "Algorithm driven #EPL #DFF lineups - here's today's #GW%d selection")
-	text = append(text, "...and here it is, good luck all! #EPL #DFF #DraftKings #GW%d")
-	text = append(text, "Here is our #AI selected #GW%d #DraftKings lineup - Good luck!")
-	text = append(text, "Our algorithm driven #EPL #DraftKings lineups for #GW%d is here! Good luck!")
-
-	sel := Random(0, len(text)-1)
-
-	cur := fmt.Sprintf(text[sel], conf.Week)
-
+	sel := Random(0, len(lineupText)-1)
+	cur := fmt.Sprintf(lineupText[sel], conf.Week)
 	b.post(cur, image)
 
 }

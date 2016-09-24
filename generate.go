@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/philmcp/Scientific_FF/models"
 	"time"
 )
 
@@ -20,7 +21,7 @@ func generate() {
 	//postToBuffer()
 }
 
-func (pool *PlayerPool) getBestLineup() {
+func getBestLineup(pool *models.PlayerPool) {
 
 	//	Spawn some threads to select random team combinations
 	for k := 0.0; k < (conf.Threads); k++ {
@@ -32,12 +33,24 @@ func (pool *PlayerPool) getBestLineup() {
 }
 
 // Thread to select random team combinations
-func thread(pool *PlayerPool, minValue float64) {
+func thread(pool *models.PlayerPool, minValue float64) {
 	printGap := 10000
 	fmt.Printf("Searching for lineups with a min value of %f\n", minValue)
 	i := 0
 	for {
-		pool.randomLineup(minValue)
+		//pool. andomLineup(pool, minValue)
+
+		/*	if wage <= conf.MaxWage && projection > bestLineup.Projection && len(usedTeams) >= conf.MinNumTeams {
+			fmt.Printf("\n***** New high score: %f Wage: $%f MinValue: %f\n", projection, wage, minValue)
+			bestLineup.Wage = wage
+			bestLineup.Projection = projection
+			bestLineup.Team = team
+
+			team.drawTeam()
+
+			team.print()
+		}*/
+
 		i++
 		if i%printGap == 0 {
 			iter += i

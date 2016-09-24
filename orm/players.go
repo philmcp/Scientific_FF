@@ -1,31 +1,15 @@
-package main
+package orm
 
 import (
 	"database/sql"
 	"fmt"
-	"log"
-
 	// Postgres Driver
 	_ "github.com/lib/pq"
+	"github.com/philmcp/Scientific_FF/models"
 	"strings"
 )
 
-type DB struct {
-	conn *sql.DB
-}
-
-// ConfigureDB sets credentials for db connect
-func Connect(host string, port int, database string, user string, password string) *DB {
-	fmt.Println("Starting up " + database + " db")
-	dbString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password, host, port, database)
-	db, err := sql.Open("postgres", dbString)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return &DB{db}
-}
-
-func (db *DB) getPlayers() PlayerPool {
+func (db *DB) getPlayers(season int, week int, dkid int, formation map[string]int) models.PlayerPool {
 	rows, _ := db.conn.Query(`SELECT dk.name, dk.team, dk.pos, status, returning_from_injury, wage, projection/max_projection as projection, selected/max_selected as selected,  form/max_form as form, points/max_points as points, value_form/max_value_form as value_form,
 
 CASE WHEN transfers_out_event = 0 THEN 0 ELSE (transfers_in_event/transfers_out_event)/max_transfers END as transfer_ratio
@@ -52,12 +36,12 @@ MAX(CASE WHEN transfers_out_event = 0 THEN 0 ELSE transfers_in_event/transfers_o
 AS vals ON true
 WHERE dk.season = $1 AND dk.week = $2 AND dkid = $3
 ORDER BY dk.team ASC
-`, conf.Season, conf.Week, conf.DKID)
+`, season, week, dkid)
 
-	out := PlayerPool{}
+	out := models.PlayerPool{}
 
-	for pos, _ := range conf.Formation {
-		out[pos] = []Player{}
+	for pos, _ := range formation {
+		out[pos] = []models.Player{}
 	}
 	for rows.Next() {
 		var (
@@ -76,7 +60,7 @@ ORDER BY dk.team ASC
 		)
 
 		rows.Scan(&name, &team, &pos, &status, &returning_from_injury, &wage, &projection, &selected, &form, &points, &value_form, &transfer_ratio)
-		cur := Player{Name: name.String, Team: team.String, Status: status.String, ReturningFromInjury: returning_from_injury.Bool, Wage: wage.Float64, Projection: projection.Float64, Selected: selected.Float64, Form: form.Float64, Points: points.Float64, ValueForm: value_form.Float64, TransferRatio: transfer_ratio.Float64}
+		cur := models.Player{Name: name.String, Team: team.String, Status: status.String, ReturningFromInjury: returning_from_injury.Bool, Wage: wage.Float64, Projection: projection.Float64, Selected: selected.Float64, Form: form.Float64, Points: points.Float64, ValueForm: value_form.Float64, TransferRatio: transfer_ratio.Float64}
 
 		//fmt.Printf("%+v\n\n", cur)
 
@@ -92,7 +76,7 @@ ORDER BY dk.team ASC
 		out["u"] = append(out["u"], cur)
 	}
 
-	for pos, _ := range conf.Formation {
+	for pos, _ := range formation {
 		fmt.Printf("Player pool (%s): %d\n", pos, len(out[pos]))
 	}
 
