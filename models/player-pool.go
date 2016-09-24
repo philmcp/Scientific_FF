@@ -28,9 +28,7 @@ func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) 
 	}
 }
 
-type PlayerList []Player
-
-func (p PlayerPool) print() {
+func (p PlayerPool) Print() {
 	fmt.Println("======= Start player pool ======= \n")
 	for _, players := range p {
 		for _, player := range players {

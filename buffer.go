@@ -3,6 +3,7 @@ package main
 import (
 	//"crypto/tls"
 	"fmt"
+	"github.com/philmcp/Scientific_FF/utils"
 	"log"
 	"net/http"
 	"net/url"
@@ -51,7 +52,7 @@ func (b *BufferAPI) post(text string, image string) {
 func (b *BufferAPI) postLineup() {
 	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", conf.Season, conf.Week, conf.DKID)
 
-	sel := Random(0, len(lineupText)-1)
+	sel := utils.Random(0, len(lineupText)-1)
 	cur := fmt.Sprintf(lineupText[sel], conf.Week)
 	b.post(cur, image)
 

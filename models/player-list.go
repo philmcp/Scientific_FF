@@ -5,9 +5,7 @@ type PlayerList []Player
 // Pick a random fantasy football lineup for a sepcific position (e.g. Defender)
 func (players PlayerList) RandomPosition(ignore map[string]bool, minValue float64, num int) PlayerList {
 	out := PlayerList{}
-
 	for {
-
 		rand := players[random(0, len(players))]
 		if minValue > rand.Selected {
 			continue
@@ -23,6 +21,5 @@ func (players PlayerList) RandomPosition(ignore map[string]bool, minValue float6
 			break
 		}
 	}
-
 	return out
 }
