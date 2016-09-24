@@ -18,8 +18,8 @@ if (!is_dir(FOLDER)) {
 define('FILE', 'ffs-'.$argv[2].'.csv');
 
 define('LOGIN_URL', 'http://members.fantasyfootballscout.co.uk/');
-define('USERNAME', 'philmcp');
-define('PASSWORD', $argv[3]);
+define('USERNAME', $argv[3]);
+define('PASSWORD', $argv[4]);
 //'upworkpassword');
 
 define('DATA_URL', 'http://members.fantasyfootballscout.co.uk/projections/six-game-projections/');
@@ -150,6 +150,7 @@ for ($i = 0; $i < $cnt; $i++) {
 
 	$j++;
 }
+
 fwrite($fp, implode(',', $csv).PHP_EOL);
 fclose($fp);
 stop('DONE');

@@ -114,10 +114,11 @@ function scrape($url,$players_csv,$matches_csv,$show_array=false){
 
     $string = phpQuery::newDocument($string);
 
-
     for($i=0;$i<10;$i++){
         $matches_div[] = $string->find('.home_lineup')->eq($i)->parent()->parent();
+        $exists = true;
     }
+
 
 
     for($i=0;$i<10;$i++){
@@ -126,6 +127,7 @@ function scrape($url,$players_csv,$matches_csv,$show_array=false){
 
         if(empty($match_div->children(0)->children(0)->text())){
             // no match
+            echo "error";
             continue;
         }
 
@@ -188,6 +190,7 @@ $week_temp = explode("/",$full_folder);
 $week = $week_temp[2];
 
 $url = 'http://www.rotowire.com/soccer/soccer-lineups.htm?league=EPL&week='.$week;
+echo "PHP: Scraping from ".$url;
 $players_csv = $full_folder.'roto-players.csv';
 $matches_csv = $full_folder.'roto-matches.csv';
 

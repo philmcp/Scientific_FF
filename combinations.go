@@ -6,33 +6,32 @@ import (
 )
 
 // Pick a random fantasy football team
-func (pool PlayerPool) randTeamLineup(minValue float64) {
+func (pool PlayerPool) randomLineup(minValue float64) {
 	team := PlayerPool{}
 	projection := 0.0
 	wage := 0.0
 
 	used := map[string]bool{}
+	usedTeams := map[string]bool{}
 
-	for pos, num := range formation {
+	for pos, num := range conf.Formation {
 		lineup := pool[pos].randPosLineup(used, minValue, num)
 		team[pos] = lineup
 		for _, p := range lineup {
-			projection += p.Projection
+			projection += p.getScore()
 			wage += p.Wage
 			used[p.getFullName()] = true
+			usedTeams[p.Team] = true
 		}
 	}
 
-	//team.print()
-
-	if wage <= MAX_WAGE && projection > BEST.Projection { //} && sufficientTeams(team) {
+	if wage <= conf.MaxWage && projection > bestLineup.Projection && len(usedTeams) >= conf.MinNumTeams {
 		fmt.Printf("\n***** New high score: %f Wage: $%f MinValue: %f\n", projection, wage, minValue)
-		BEST.Wage = wage
-		BEST.Projection = projection
-		BEST.Team = team
+		bestLineup.Wage = wage
+		bestLineup.Projection = projection
+		bestLineup.Team = team
 
-		//	temp := create(team)
-		//	temp.drawTeam()
+		team.drawTeam()
 
 		team.print()
 	}
@@ -43,7 +42,12 @@ func (players PlayerList) randPosLineup(ignore map[string]bool, minValue float64
 	out := PlayerList{}
 
 	for {
+
 		rand := players[Random(0, len(players))]
+		if minValue > rand.Selected {
+			continue
+		}
+
 		fullName := rand.getFullName()
 		if _, exist := ignore[fullName]; !exist {
 

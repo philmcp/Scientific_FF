@@ -1,24 +1,45 @@
 package main
 
 import (
-	"bytes"
 	//"crypto/tls"
 	"fmt"
-	"io/ioutil"
-
+	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
-var ACCESS_TOKEN = conf.Buffer.AccessToken
-var UPDATE_URL = fmt.Sprintf("https://api.bufferapp.com/1/updates/create.json?access_token=%s", ACCESS_TOKEN)
-var TWITTER_ID = conf.Buffer.TwitterID
+type BufferAPI struct {
+	AccessToken string
+	TwitterID   string
+	FacebookID  string
+}
 
 // Access Buffer.com REST API
-func postToBuffer() {
-	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", SEASON, WEEK, DKID)
-	encImage, _ := url.Parse(image)
-	fmt.Println(encImage.String())
+func (b *BufferAPI) post(text string, image string) {
+
+	text = cleanURL(text)
+
+	encText, err := url.Parse(text)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Printf("(BUFFER) text: %s image: %s\n", encText.String(), image)
+
+	data := "text=" + encText.String() + "&now=true&profile_ids[]=" + b.TwitterID
+
+	if image != "" {
+		data += "&media[photo]=" + image
+	}
+
+	fmt.Println("====" + data + "====")
+	updateUrl := fmt.Sprintf("https://api.bufferapp.com/1/updates/create.json?access_token=%s", b.AccessToken)
+	makeRequest(updateUrl, "POST", data)
+}
+
+func (b *BufferAPI) postLineup() {
+	image := fmt.Sprintf("https://www.scoopanalytics.com/ff/output/%d/%d/%d.png", conf.Season, conf.Week, conf.DKID)
 
 	text := []string{}
 	text = append(text, "Its #DFF time! Here is our #EPL #Draftkings lineup for #GW%d")
@@ -31,28 +52,44 @@ func postToBuffer() {
 
 	sel := Random(0, len(text)-1)
 
-	cur := fmt.Sprintf(text[sel], WEEK)
-	fmt.Println(cur)
-	encText, _ := url.Parse(cur)
-	fmt.Println(encText.String())
+	cur := fmt.Sprintf(text[sel], conf.Week)
 
-	data := "text=" + encText.String() + "&now=true&profile_ids[]=" + TWITTER_ID + "&media[photo]=" + encImage.String()
-	fmt.Println(data)
+	b.post(cur, image)
 
-	makeRequest(UPDATE_URL, "POST", data)
 }
 
-func makeRequest(url string, method string, vals string) {
-	req, err := http.NewRequest(method, url, bytes.NewBuffer([]byte(vals)))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+func (b *BufferAPI) postInjury(inj *Injury, tweet *Tweet) {
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	encName, err := url.Parse(inj.Name)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
-	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	encInjury, err := url.Parse(inj.Injury)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	encTeam, err := url.Parse(inj.Team)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Step 1, Generate and save the image
+	url := fmt.Sprintf(conf.RemoteLoc+"/assets/scripts/injury/image.php?data=%s,%s,%s,%s,%s,%d", encName.String(), encInjury.String(), encTeam.String(), inj.Perc, inj.Returns, tweet.ID)
+	fmt.Println("Getting " + url)
+
+	response, e := http.Get(url)
+	if e != nil {
+		log.Fatal(e)
+	}
+
+	// Step 2, post to buffer using saved image
+	url2 := fmt.Sprintf(conf.RemoteLoc+"/assets/scripts/injury/output/%d.jpg", tweet.ID)
+	fmt.Println("Posting " + url2)
+	defer response.Body.Close()
+	fmt.Println(url)
+	if inj.Returns != "" {
+		conf.Buffer.post("#FPL Injury news: "+inj.Name+" ("+strings.ToUpper(inj.Team)+") - "+inj.Injury+" - Returns: "+inj.Returns, url2)
+	}
 }

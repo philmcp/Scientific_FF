@@ -1,6 +1,5 @@
 package main
 
-/*
 import (
 	"bufio"
 	"flag"
@@ -49,7 +48,7 @@ var (
 )
 
 func resetOutput() {
-	fmt.Println("Reseting " + outputFolder)
+	//	fmt.Println("Reseting " + outputFolder)
 	//	RemoveContents(outputFolder)
 	if _, err := os.Stat(outputFolder); os.IsNotExist(err) {
 		os.Mkdir(outputFolder, 0777)
@@ -97,7 +96,7 @@ func loadFont(color *image.Uniform, size *float64) *freetype.Context {
 	return c
 }
 
-func (t *Team) drawTeam() {
+func (pp *PlayerPool) drawTeam() {
 	// Decode the JPEG data. If reading from file, create a reader with
 	resetOutput()
 	flag.Parse()
@@ -119,14 +118,14 @@ func (t *Team) drawTeam() {
 	gamesFont.SetClip(rgba.Bounds())
 	gamesFont.SetDst(rgba)
 
-	redFont := loadFont( /*image.Uniform.RGBA(50, 50, 50, 1)  image.White, salarySize)
+	redFont := loadFont( /*image.Uniform.RGBA(50, 50, 50, 1) */ image.White, salarySize)
 	redFont.SetClip(rgba.Bounds())
 	redFont.SetDst(rgba)
 
 	salary := 0.0
 
 	// Draw the team
-	for pos, players := range t.Players {
+	for pos, players := range *pp {
 		i := 0
 		for _, player := range players {
 
@@ -192,7 +191,7 @@ func (t *Team) drawTeam() {
 
 	// Draw Week
 	pt = freetype.Pt(pixelsWeek.X, pixelsWeek.Y)
-	_, err = weekFont.DrawString(fmt.Sprintf("Week %d", gameWeek), pt)
+	_, err = weekFont.DrawString(fmt.Sprintf("Week %d", conf.Week), pt)
 
 	if err != nil {
 		log.Println(err)
@@ -201,7 +200,7 @@ func (t *Team) drawTeam() {
 
 	// Draw Games
 	pt = freetype.Pt(pixelsGames.X, pixelsGames.Y)
-	_, err = gamesFont.DrawString(DKName, pt)
+	_, err = gamesFont.DrawString(conf.DKName, pt)
 
 	if err != nil {
 		log.Println(err)
@@ -209,8 +208,8 @@ func (t *Team) drawTeam() {
 	}
 
 	// Save that RGBA image to disk.
-	outputLoc := fmt.Sprintf("output/%d/%d/%d.png", season, gameWeek, DKID)
-	fmt.Println("Drawing to " + outputLoc)
+	outputLoc := fmt.Sprintf("output/%d/%d/%d.png", conf.Season, conf.Week, conf.DKID)
+	//	fmt.Println("Drawing to " + outputLoc)
 	outFile, err := os.Create(outputLoc)
 	if err != nil {
 		log.Println(err)
@@ -229,7 +228,5 @@ func (t *Team) drawTeam() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Wrote out.png OK.")
+	//fmt.Println("Wrote out.png OK.")
 }
-
-*/

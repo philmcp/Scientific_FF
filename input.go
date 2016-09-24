@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
+	//	"golang.org/x/text/transform"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 )
+
+type CSVData struct {
+	Data [][]string
+}
 
 // Some functions to parse the data from file
 var enc = charmap.Windows1252
@@ -18,8 +22,8 @@ func loadCSV(filename string) (csv CSVData) {
 	fmt.Println("Loading CSV: " + filename)
 	f, _ := os.Open(filename)
 
-	r := transform.NewReader(f, enc.NewDecoder())
-	scanner := bufio.NewScanner(r)
+	//	r := transform.NewReader(f, enc.NewDecoder())
+	scanner := bufio.NewScanner(f)
 
 	i := 0
 
@@ -36,7 +40,7 @@ func loadCSV(filename string) (csv CSVData) {
 	if err := scanner.Err(); err != nil {
 		fmt.Println(err)
 	}
-
+	defer f.Close()
 	return csv
 }
 
@@ -48,7 +52,7 @@ func (db *DB) loadFFS(csv *CSVData) {
 
 	index := -1
 
-	_, err := db.conn.Exec("DELETE FROM ffs WHERE season = $1 AND week = $2", SEASON, WEEK)
+	_, err := db.conn.Exec("DELETE FROM ffs WHERE season = $1 AND week = $2", conf.Season, conf.Week)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +61,7 @@ func (db *DB) loadFFS(csv *CSVData) {
 
 		// Get the index
 		for k, val := range v {
-			search := fmt.Sprintf("gw%d", WEEK)
+			search := fmt.Sprintf("gw%d", conf.Week)
 			if index == -1 && strings.Contains(val, search) {
 				index = k
 				fmt.Printf("FFS Index is %d\n", index)
@@ -73,7 +77,7 @@ func (db *DB) loadFFS(csv *CSVData) {
 
 		name := getLastName(mapDuplicateNames(v[0]))
 
-		db.conn.Exec("INSERT INTO ffs (name, team, projection, pos, season, week) VALUES ($1, $2, $3, $4, $5, $6)", name, team, i, posMapping[v[2]], SEASON, WEEK)
+		db.conn.Exec("INSERT INTO ffs (name, team, projection, pos, season, week) VALUES ($1, $2, $3, $4, $5, $6)", name, team, i, posMapping[v[2]], conf.Season, conf.Week)
 
 	}
 
@@ -81,7 +85,7 @@ func (db *DB) loadFFS(csv *CSVData) {
 
 // Draft Kings
 func (db *DB) loadDK(csv *CSVData) {
-	_, err := db.conn.Exec("DELETE FROM dk WHERE season = $1 AND week = $2 AND dkid = $3", SEASON, WEEK, DKID)
+	_, err := db.conn.Exec("DELETE FROM dk WHERE season = $1 AND week = $2 AND dkid = $3", conf.Season, conf.Week, conf.DKID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,14 +100,75 @@ func (db *DB) loadDK(csv *CSVData) {
 
 		name := getLastName(mapDuplicateNames(v[1]))
 
-		db.conn.Exec("INSERT INTO dk (name, team, wage, pos, season, week, dkid) VALUES ($1, $2, $3, $4, $5, $6, $7)", name, v[5], i, v[0], SEASON, WEEK, DKID)
+		db.conn.Exec("INSERT INTO dk (name, team, wage, pos, season, week, dkid) VALUES ($1, $2, $3, $4, $5, $6, $7)", name, v[5], i, v[0], conf.Season, conf.Week, conf.DKID)
+	}
+
+}
+
+// FPL
+func (db *DB) loadFPL(csv *CSVData, page string) {
+	res, err := db.conn.Query("SELECT * FROM fpl WHERE season = $1 AND week = $2", conf.Season, conf.Week)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	exists := res.Next()
+
+	for _, v := range csv.Data {
+		//	if i == 0 {
+		//		continue
+		//	}
+		for k, _ := range v {
+			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
+		}
+
+		name := getLastName(mapDuplicateNames(ParseEncoding(v[0])))
+
+		cost, _ := strconv.ParseFloat(v[3], 64)
+		selected, _ := strconv.ParseFloat(v[4], 64)
+		form, _ := strconv.ParseFloat(v[5], 64)
+		points, _ := strconv.ParseFloat(v[6], 64)
+		data, _ := strconv.ParseFloat(v[7], 64)
+
+		if !exists {
+			// Insert for first time
+			_, err := db.conn.Exec(`INSERT INTO fpl (name,
+		team,
+		pos,
+		cost,
+		selected,
+		form,
+		points,
+		`+page+`,
+		week,
+		season) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`, name, v[1], v[2], cost, selected, form, points, data, conf.Week, conf.Season)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+		} else {
+
+			// Update
+			_, err := db.conn.Exec(`UPDATE fpl SET
+		pos= $3,
+		cost= $4,
+		selected =$5,
+		form =$6,
+		points = $7,
+		`+page+` = $8 WHERE	name = $1 AND team = $2 AND week = $9 AND season = $10`, name, v[1], v[2], cost, selected, form, points, data, conf.Week, conf.Season)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
 	}
 
 }
 
 // Roto
 func (db *DB) loadRoto(csv *CSVData) {
-	_, err := db.conn.Exec("DELETE FROM roto_players WHERE season = $1 AND week = $2", SEASON, WEEK)
+	_, err := db.conn.Exec("DELETE FROM roto_players WHERE season = $1 AND week = $2", conf.Season, conf.Week)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,7 +180,7 @@ func (db *DB) loadRoto(csv *CSVData) {
 		name := getLastName(v[1])
 		team := teamRoto2DK(v[0])
 
-		db.conn.Exec("INSERT INTO roto_players (team, name, pos, status, returning_from_injury, week, season) VALUES ($1, $2, $3, $4, $5, $6, $7)", team, name, v[2], v[3], v[4], WEEK, SEASON)
+		db.conn.Exec("INSERT INTO roto_players (team, name, pos, status, returning_from_injury, week, season) VALUES ($1, $2, $3, $4, $5, $6, $7)", team, name, v[2], v[3], v[4], conf.Week, conf.Season)
 	}
 
 }

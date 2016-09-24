@@ -61,6 +61,20 @@ func RemoveContents(dir string) error {
 	return nil
 }
 
+func cleanURL(str string) string {
+
+	//str = strings.Replace(str, "$", "", -1)
+	//str = strings.Replace(str, "&", "", -1)
+	/*	str = strings.Replace(str, "+", "", -1)
+		str = strings.Replace(str, ",", "", -1)
+		str = strings.Replace(str, "/", "", -1)
+		str = strings.Replace(str, ":", "", -1)*/
+	str = strings.Replace(str, "%", "", -1)
+	/*	str = strings.Replace(str, "=", "", -1)
+		str = strings.Replace(str, ";", "", -1)*/
+	return str
+}
+
 func ParseEncoding(str string) string {
 	str = strings.ToLower(str)
 

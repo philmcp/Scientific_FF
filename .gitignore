@@ -1,6 +1,7 @@
-conf.json
-input/*
-output/*
+assets/conf/*
+assets/data/*
+assets/misc/*
+assets/images/*
 football-fantasy
 misc/*
 
