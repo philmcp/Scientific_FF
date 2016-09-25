@@ -1,6 +1,6 @@
 <?php
 
-require 'lib/phpQuery-master/phpQuery/phpQuery.php';
+require 'assets/lib/phpQuery-master/phpQuery/phpQuery.php';
 
 
 function get_match_info($match_div){
@@ -187,7 +187,7 @@ if (sizeof($argv) < 2) {
 
 $full_folder = $argv[1];
 $week_temp = explode("/",$full_folder);
-$week = $week_temp[2];
+$week = $week_temp[count($week_temp) -2];
 
 $url = 'http://www.rotowire.com/soccer/soccer-lineups.htm?league=EPL&week='.$week;
 echo "PHP: Scraping from ".$url;

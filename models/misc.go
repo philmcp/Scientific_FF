@@ -1,14 +1,57 @@
 package models
 
-import (
-	"math/rand"
-	"time"
-)
+type Lineup struct {
+	Team       PlayerPool
+	Projection float64
+	Wage       float64
+	NumTeams   int
+}
 
-// Generate a random number
-func random(min, max int) int {
-	//fmt.Printf("%d %d\n", min, max)
-	rand.Seed(time.Now().UnixNano())
-	ret := rand.Intn(max-min) + min
-	return ret
+type CSVData struct {
+	Data [][]string
+}
+
+type Data struct {
+	FPL struct {
+		ValueForm         PlayerList
+		TransfersInEvent  PlayerList
+		TransfersOutEvent PlayerList
+	}
+	FFS  PlayerList
+	Roto PlayerList
+	DK   PlayerList
+}
+
+type Configuration struct {
+	RemoteLoc string
+	Database  struct {
+		Host     string
+		Port     int
+		DB       string
+		User     string
+		Password string
+	}
+	FFScout struct {
+		Username string
+		Password string
+	}
+	Buffer struct {
+		AccessToken string
+		TwitterID   string
+		FacebookID  string
+	}
+	Twitter struct {
+		AppKey    string
+		AppSecret string
+	}
+	MinNumTeams int
+	MaxWage     float64
+	Formation   map[string]int
+	Threads     float64
+	ValueJump   float64
+	MinValue    float64
+	Season      int
+	Week        int
+	DKID        int
+	DKName      string
 }

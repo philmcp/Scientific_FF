@@ -5,10 +5,11 @@ import (
 )
 
 // Player pool
+
 type PlayerPool map[string]PlayerList
 
 // Pick a random fantasy football team
-func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) {
+func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) Lineup {
 	team := PlayerPool{}
 	projection := 0.0
 	wage := 0.0
@@ -17,7 +18,7 @@ func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) 
 	usedTeams := map[string]bool{}
 
 	for pos, num := range formation {
-		lineup := pool[pos].randomPosition(used, minValue, num)
+		lineup := pool[pos].RandomPosition(used, minValue, num)
 		team[pos] = lineup
 		for _, p := range lineup {
 			projection += p.getScore()
@@ -26,6 +27,8 @@ func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) 
 			usedTeams[p.Team] = true
 		}
 	}
+
+	return Lineup{Team: team, Wage: wage, Projection: projection, NumTeams: len(usedTeams)}
 }
 
 func (p PlayerPool) Print() {

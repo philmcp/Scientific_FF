@@ -2,7 +2,12 @@ package main
 
 import (
 	"github.com/jasonlvhit/gocron"
+	"github.com/philmcp/Scientific_FF/api"
+	"github.com/philmcp/Scientific_FF/conf"
+	"github.com/philmcp/Scientific_FF/draw"
 	"github.com/philmcp/Scientific_FF/models"
+	"github.com/philmcp/Scientific_FF/orm"
+	"github.com/philmcp/Scientific_FF/scrape"
 	"log"
 	"os"
 	"runtime"
@@ -11,13 +16,15 @@ import (
 
 // Config
 var (
-	conf = &Configuration{}
-	db   *DB
+	config  = &models.Configuration{}
+	db      *orm.ORM
+	buffer  *api.BufferAPI
+	twitter *api.TwitterAPI
+	scraper *scrape.Scrape
+	drawer  *draw.Draw
 
 	inputFolder  string
 	outputFolder string
-
-	bestLineup = BestLineup{Wage: 0, Projection: 0}
 
 	// Thread stuff
 	iter  = 0
@@ -30,25 +37,26 @@ var (
 
 func main() {
 	runtime.GOMAXPROCS(12)
-	if len(os.Args) < 2 {
-		log.Fatal("Missing arguements...")
-	}
 
-	confFile := "conf/local.json"
+	confFile := "assets/conf/local.json"
 	if len(os.Args) > 1 {
 		confFile = os.Args[1]
 	}
 
 	// Load config
-	if err := LoadConfig(confFile, conf); err != nil {
+	if err := conf.LoadConfig(confFile, config); err != nil {
 		log.Fatal(err)
 	}
 
-	db = Connect(conf.Database.Host, conf.Database.Port, conf.Database.DB, conf.Database.User, conf.Database.Password)
+	db = orm.NewORM(config)
+	twitter = api.NewTwitter(config)
+	buffer = api.NewBuffer(config)
+	scraper = scrape.NewScraper(config)
+	drawer = draw.NewDraw(config)
 
-	//	generate()
+	generate()
 
-	conf.Twitter.getInjuryNews()
+	//	conf.Twitter.getInjuryNews()
 
 	//gocron.Every(5).Seconds().Do(conf.Twitter.getInjuryNews)
 	// function Start start all the pending jobs

@@ -3,14 +3,14 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/philmcp/Scientific_FF/models"
 	// Postgres Driver
 	_ "github.com/lib/pq"
-	"github.com/philmcp/Scientific_FF/models"
 	"strings"
 )
 
-func (db *DB) getPlayers(season int, week int, dkid int, formation map[string]int) models.PlayerPool {
-	rows, _ := db.conn.Query(`SELECT dk.name, dk.team, dk.pos, status, returning_from_injury, wage, projection/max_projection as projection, selected/max_selected as selected,  form/max_form as form, points/max_points as points, value_form/max_value_form as value_form,
+func (db *ORM) GetPlayers() models.PlayerPool {
+	rows, _ := db.Conn.Query(`SELECT dk.name, dk.team, dk.pos, status, returning_from_injury, wage, projection/max_projection as projection, selected/max_selected as selected,  form/max_form as form, points/max_points as points, value_form/max_value_form as value_form,
 
 CASE WHEN transfers_out_event = 0 THEN 0 ELSE (transfers_in_event/transfers_out_event)/max_transfers END as transfer_ratio
  FROM roto_players
@@ -36,11 +36,11 @@ MAX(CASE WHEN transfers_out_event = 0 THEN 0 ELSE transfers_in_event/transfers_o
 AS vals ON true
 WHERE dk.season = $1 AND dk.week = $2 AND dkid = $3
 ORDER BY dk.team ASC
-`, season, week, dkid)
+`, db.Config.Season, db.Config.Week, db.Config.DKID)
 
 	out := models.PlayerPool{}
 
-	for pos, _ := range formation {
+	for pos, _ := range db.Config.Formation {
 		out[pos] = []models.Player{}
 	}
 	for rows.Next() {
@@ -76,7 +76,7 @@ ORDER BY dk.team ASC
 		out["u"] = append(out["u"], cur)
 	}
 
-	for pos, _ := range formation {
+	for pos, _ := range db.Config.Formation {
 		fmt.Printf("Player pool (%s): %d\n", pos, len(out[pos]))
 	}
 

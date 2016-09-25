@@ -9,6 +9,8 @@ $inp  = $argv[1];
 $week = explode("/", $inp);
 $week = $week[sizeof($week)-2];
 
+print_r($inp);
+
 define('FOLDER', $inp);
 
 if (!is_dir(FOLDER)) {
@@ -25,11 +27,11 @@ define('PASSWORD', $argv[4]);
 define('DATA_URL', 'http://members.fantasyfootballscout.co.uk/projections/six-game-projections/');
 
 define('USER_AGENT', 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36');
-define('COOKIE_JAR', './scrape/lib/cookiejar.txt');
+define('COOKIE_JAR', './assets/lib/cookiejar.txt');
 
 function stop($msg) {
-	die();
-	//die($msg."\n");
+//	die();
+	die($msg."\n");
 }
 
 function createCurl($url) {
