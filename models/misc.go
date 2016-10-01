@@ -12,19 +12,16 @@ type CSVData struct {
 }
 
 type Data struct {
-	FPL struct {
-		ValueForm         PlayerList
-		TransfersInEvent  PlayerList
-		TransfersOutEvent PlayerList
-	}
+	FPL  PlayerList
 	FFS  PlayerList
 	Roto PlayerList
 	DK   PlayerList
 }
 
 type Configuration struct {
-	RemoteLoc string
-	Database  struct {
+	RemoteLoc    string
+	OutputFolder string
+	Database     struct {
 		Host     string
 		Port     int
 		DB       string

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,27 @@ func RemoveContents(dir string) error {
 		}
 	}
 	return nil
+}
+
+func DeleteFile(outputLoc string) {
+
+	if _, err := os.Stat(outputLoc); os.IsExist(err) {
+		err := os.Remove(outputLoc)
+
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func FileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		log.Println(err)
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
 
 func GetLastName(str string) string {

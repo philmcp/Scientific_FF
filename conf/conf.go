@@ -3,14 +3,14 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
-
+	"log"
 	"os"
 )
 
 // Loaded from conf.json
 func LoadConfig(filepath string, conf interface{}) (err error) {
 	// Load configuration values from conf.js into the Configuration struct
-	fmt.Println("Loading " + filepath)
+	log.Println("Loading " + filepath)
 	file, err := os.Open(filepath)
 
 	if err != nil {

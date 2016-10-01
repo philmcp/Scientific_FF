@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	"log"
 )
 
 // Player pool
@@ -32,12 +32,12 @@ func (pool PlayerPool) RandomLineup(minValue float64, formation map[string]int) 
 }
 
 func (p PlayerPool) Print() {
-	fmt.Println("======= Start player pool ======= \n")
+	log.Println("======= Start player pool ======= \n")
 	for _, players := range p {
 		for _, player := range players {
 			player.print()
 		}
 	}
-	fmt.Println("======= End player pool ======= ")
+	log.Println("======= End player pool ======= ")
 
 }

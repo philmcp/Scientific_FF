@@ -55,10 +55,10 @@ func main() {
 	drawer = draw.NewDraw(config)
 
 	generate()
-
+	//	injuries()
 	//	conf.Twitter.getInjuryNews()
 
-	//gocron.Every(5).Seconds().Do(conf.Twitter.getInjuryNews)
+	gocron.Every(30).Minutes().Do(injuries)
 	// function Start start all the pending jobs
 	<-gocron.Start()
 }

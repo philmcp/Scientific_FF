@@ -8,35 +8,19 @@ import (
 	_ "github.com/golang/freetype/truetype"
 	"github.com/leekchan/accounting"
 	"github.com/philmcp/Scientific_FF/models"
-	"github.com/philmcp/Scientific_FF/utils"
 	_ "golang.org/x/image/font"
 	"image"
-	//	"image/color"
-	"image/draw"
 	"image/png"
-	"io/ioutil"
+	//	"image/color"
 	"log"
 	"os"
 	"strings"
 )
 
-type PixelPos struct {
-	X int
-	Y int
-}
+func (d *Draw) DrawTeam(l *models.Lineup) {
+	// Decode the JPEG data. If reading from file, create a reader with
 
-var (
-	dpi        = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")
-	fontfile   = flag.String("fontfile", "fonts/DIN Condensed Bold.ttf", "filename of the ttf font")
-	hinting    = flag.String("hinting", "none", "none | full")
-	playerSize = flag.Float64("playerSize", 48, "font size in points")
-	salarySize = flag.Float64("salarySize", 80, "font size in points")
-	weekSize   = flag.Float64("weekSize", 90, "font size in points")
-	gamesSize  = flag.Float64("gamesSize", 45, "font size in points")
-	teamSize   = flag.Float64("teamSize", 27, "font size in points")
-	spacing    = flag.Float64("spacing", 1.5, "line spacing (e.g. 2 means double spaced)")
-	wonb       = flag.Bool("whiteonblack", false, "white text on a black background")
-	pixels     = map[string][]PixelPos{
+	pixels := map[string][]PixelPos{
 		"gk": []PixelPos{PixelPos{616, 876}},
 		"d":  []PixelPos{PixelPos{347, 694}, PixelPos{855, 694}},
 		"m":  []PixelPos{PixelPos{404, 466}, PixelPos{813, 466}},
@@ -44,83 +28,31 @@ var (
 		"u":  []PixelPos{PixelPos{1210, 144}},
 	}
 
-	pixelsSalary = PixelPos{1267, 400}
-	pixelsWeek   = PixelPos{636, 83}
-	pixelsGames  = PixelPos{640, 130}
-)
+	pixelsSalary := PixelPos{1267, 400}
+	pixelsWeek := PixelPos{636, 83}
+	pixelsGames := PixelPos{640, 130}
 
-func (d *Draw) resetOutput() {
-	fmt.Println("Removing " + d.Folder)
-	utils.RemoveContents(d.Folder)
-	if _, err := os.Stat(d.Folder); os.IsNotExist(err) {
-		os.Mkdir(d.Folder, 0775)
-	}
-}
-
-func loadImage() *image.RGBA {
-	reader, err := os.Open("assets/images/templates/pitch.png")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer reader.Close()
-	src, _, err := image.Decode(reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bounds := src.Bounds()
-	rgba := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	draw.Draw(rgba, rgba.Bounds(), src, rgba.Rect.Min, draw.Src)
-
-	return rgba
-}
-
-func loadFont(color *image.Uniform, size *float64) *freetype.Context {
-	fontBytes, err := ioutil.ReadFile(*fontfile)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	f, err := freetype.ParseFont(fontBytes)
-
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	c := freetype.NewContext()
-	c.SetDPI(*dpi)
-	c.SetFont(f)
-	c.SetFontSize(*size)
-	c.SetSrc(color)
-
-	return c
-}
-
-func (d *Draw) DrawTeam(l *models.Lineup) {
-	// Decode the JPEG data. If reading from file, create a reader with
-	d.resetOutput()
+	//	d.resetOutput()
 	flag.Parse()
-	rgba := loadImage()
+	rgba := loadImage("assets/images/templates/pitch.png")
 
-	blackFont := loadFont(image.Black, playerSize)
+	blackFont := loadFont(image.Black, 48, *fontDIN)
 	blackFont.SetClip(rgba.Bounds())
 	blackFont.SetDst(rgba)
 
-	whiteFont := loadFont(image.White, teamSize)
+	whiteFont := loadFont(image.White, 27, *fontDIN)
 	whiteFont.SetClip(rgba.Bounds())
 	whiteFont.SetDst(rgba)
 
-	weekFont := loadFont(image.White, weekSize)
+	weekFont := loadFont(image.White, 90, *fontDIN)
 	weekFont.SetClip(rgba.Bounds())
 	weekFont.SetDst(rgba)
 
-	gamesFont := loadFont(image.White, gamesSize)
+	gamesFont := loadFont(image.White, 45, *fontDIN)
 	gamesFont.SetClip(rgba.Bounds())
 	gamesFont.SetDst(rgba)
 
-	redFont := loadFont(image.White, salarySize)
+	redFont := loadFont(image.White, 80, *fontDIN)
 	redFont.SetClip(rgba.Bounds())
 	redFont.SetDst(rgba)
 
@@ -133,7 +65,7 @@ func (d *Draw) DrawTeam(l *models.Lineup) {
 
 			playerCoor := pixels[pos][i]
 			// Player name
-			pt := freetype.Pt(playerCoor.X+7, playerCoor.Y+int(blackFont.PointToFixed(*playerSize)>>6))
+			pt := freetype.Pt(playerCoor.X+7, playerCoor.Y+47)
 			_, err := blackFont.DrawString(player.GetDisplayName(), pt)
 			if err != nil {
 				log.Println(err)
@@ -210,12 +142,11 @@ func (d *Draw) DrawTeam(l *models.Lineup) {
 	}
 
 	// Save that RGBA image to disk.
-	outputLoc := fmt.Sprintf(d.Folder+"%d.png", d.Config.Season, d.Config.Week, d.Config.DKID)
-	//	fmt.Println("Drawing to " + outputLoc)
+	outputLoc := d.Config.OutputFolder + "lineup.png"
+	//	log.Println("Drawing to " + outputLoc)
 	outFile, err := os.Create(outputLoc)
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	defer outFile.Close()
 	b := bufio.NewWriter(outFile)
@@ -228,5 +159,5 @@ func (d *Draw) DrawTeam(l *models.Lineup) {
 		log.Fatal(err)
 	}
 
-	//fmt.Println("Wrote out.png OK.")
+	//log.Println("Wrote out.png OK.")
 }

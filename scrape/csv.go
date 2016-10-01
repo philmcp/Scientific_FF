@@ -2,10 +2,11 @@ package scrape
 
 import (
 	"bufio"
-	"fmt"
+
 	"github.com/philmcp/Scientific_FF/models"
 	"github.com/philmcp/Scientific_FF/utils"
 	"golang.org/x/text/encoding/charmap"
+	"log"
 	"os"
 	"strings"
 )
@@ -15,7 +16,7 @@ import (
 var enc = charmap.Windows1252
 
 func LoadCSV(filename string) (csv models.CSVData) {
-	fmt.Println("Loading CSV: " + filename)
+	log.Println("Loading CSV: " + filename)
 	f, _ := os.Open(filename)
 
 	//	r := transform.NewReader(f, enc.NewDecoder())
@@ -34,7 +35,7 @@ func LoadCSV(filename string) (csv models.CSVData) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer f.Close()
 

@@ -19,16 +19,16 @@ type Scrape struct {
 func NewScraper(config *models.Configuration) *Scrape {
 	return &Scrape{
 		Config: config,
-		Folder: fmt.Sprintf("assets/data/generate/input/%d/%d/", config.Season, config.Week),
+		Folder: fmt.Sprintf("assets/data/input/%d/%d/", config.Season, config.Week),
 	}
 }
 
 // FFS
 func (s *Scrape) ScrapeFFS() {
-	fmt.Println("Scraping FFS data to " + s.Folder)
+	log.Println("Scraping FFS data to " + s.Folder)
 
 	output, err := exec.Command("php", "assets/scrape/ffs.php", s.Folder, fmt.Sprintf("%d", s.Config.DKID), s.Config.FFScout.Username, s.Config.FFScout.Password).Output()
-
+	log.Println(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,11 +40,13 @@ func (s *Scrape) ScrapeFFS() {
 
 // Roto
 func (s *Scrape) ScrapeRoto() {
-	fmt.Println("Scraping Roto data to " + s.Folder)
+	log.Println("Scraping Roto data to " + s.Folder + " " + fmt.Sprintf("%d", s.Config.DKID))
 	output, err := exec.Command("php", "assets/scrape/roto.php", s.Folder, fmt.Sprintf("%d", s.Config.DKID)).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(string(output))
 
 	if strings.Contains(string(output), "error") {
 		log.Fatal("Roto didn't crawl properly")
@@ -54,15 +56,15 @@ func (s *Scrape) ScrapeRoto() {
 
 // FPL
 // page = transfers_out_event, transfers_out_event, value_form
-func (s *Scrape) ScrapeFPL(page string) {
-	fmt.Println("Scraping FPL data to " + s.Folder)
-	out, err := exec.Command("phantomjs", "assets/scrape/fpl.js", page, s.Folder).Output()
+func (s *Scrape) ScrapeFPL() {
+	log.Printf("Scraping FPL data to " + s.Folder + "\n")
 
+	out, err := exec.Command("php", "assets/scrape/fpl.php", s.Folder).Output()
 	fmt.Println(string(out))
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 // DK
@@ -70,7 +72,7 @@ func (s *Scrape) ScrapeDK() {
 
 	url := fmt.Sprintf("https://www.draftkings.co.uk/lineup/getavailableplayerscsv?contestTypeId=27&draftGroupId=%d", s.Config.DKID)
 	out := s.Folder + fmt.Sprintf("dk-%d.csv", s.Config.DKID)
-	fmt.Println("Scraping DK data to " + s.Folder)
+	log.Println("Scraping DK data to " + s.Folder)
 
 	utils.WGet(url, out)
 }

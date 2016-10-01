@@ -11,7 +11,7 @@ func (players PlayerList) RandomPosition(ignore map[string]bool, minValue float6
 	out := PlayerList{}
 	for {
 		rand := players[utils.Random(0, len(players))]
-		if minValue > rand.Selected {
+		if minValue > rand.FPL.SelectedByPercent {
 			continue
 		}
 

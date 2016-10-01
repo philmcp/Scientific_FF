@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/philmcp/Scientific_FF/models"
 	"github.com/philmcp/Scientific_FF/utils"
+	"log"
 	"net/url"
 	"strings"
 )
@@ -28,24 +29,27 @@ func NewBuffer(config *models.Configuration) *BufferAPI {
 }
 
 // Access Buffer.com REST API
-func (b *BufferAPI) post(text string, image string) {
+func (b *BufferAPI) Post(text string, image string) {
 
 	text = strings.Replace(text, "%", "", -1)
 
 	encText, err := url.Parse(text)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
-	fmt.Printf("(BUFFER) text: %s image: %s\n", encText.String(), image)
+	imgText, err := url.Parse(image)
+	if err != nil {
+		log.Println(err)
+	}
 
-	data := "text=" + encText.String() + "&now=true&profile_ids[]=" + b.Config.Buffer.TwitterID
+	log.Printf("(BUFFER) text: %s image: %s\n", encText.String(), image)
+
+	data := "text=" + encText.String() + "&now=true&profile_ids[]=" + b.Config.Buffer.TwitterID + "&profile_ids[]=" + b.Config.Buffer.FacebookID
 
 	if image != "" {
-		data += "&media[photo]=" + image
+		data += "&media[photo]=" + imgText.String()
 	}
-
-	fmt.Println("====" + data + "====")
 	updateUrl := fmt.Sprintf("https://api.bufferapp.com/1/updates/create.json?access_token=%s", b.Config.Buffer.AccessToken)
 	utils.MakeRequest(updateUrl, "POST", data)
 }

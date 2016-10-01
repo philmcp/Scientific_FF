@@ -67,7 +67,7 @@ func teamFFS2DK(name string) string {
 	}
 
 	if _, exist := teamMapping[name]; exist {
-		//	fmt.Println("Mapping " + name + " to " + teamMapping[name])
+		//	log.Println("Mapping " + name + " to " + teamMapping[name])
 		return teamMapping[name]
 	} else {
 		log.Fatal("FFS team name doesnt exist: " + name)
@@ -79,8 +79,15 @@ func mapDuplicateNames(name string) string {
 	playerMapping := map[string]string{
 		"christian benteke": "Benteke",
 		"jonathan benteke":  "JBenteke",
-		"callum wilson":     "Wilson",
 		"pau l<f3>pez":      "Pau Lopez",
+		"lewis cook":        "Cook",
+		"steve cook":        "S_Cook",
+		"adam smith":        "A_Smith",
+		"bradley smith":     "B_Smith",
+		"mark wilson":       "M_Wilson",
+		"callum wilson":     "C_Wilson",
+		"josh robson":       "J_Robson",
+		"thomas robson":     "T_Robson",
 	}
 
 	if _, exist := playerMapping[strings.ToLower(name)]; exist {

@@ -16,7 +16,7 @@ type ORM struct {
 
 // ConfigureDB sets credentials for db connect
 func NewORM(config *models.Configuration) *ORM {
-	fmt.Println("Starting up " + config.Database.DB + " db")
+	log.Println("Setting up " + config.Database.DB + " db")
 	dbString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", config.Database.User, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.DB)
 
 	db, err := sql.Open("postgres", dbString)

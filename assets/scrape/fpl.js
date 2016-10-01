@@ -5,8 +5,36 @@ console.log('The default user agent is ' + page.settings.userAgent);
 console.log("Writing to "+args[1] + " "+args[2]);
 page.settings.userAgent = 'SpecialAgent';
 
-page.open('https://fantasy.premierleague.com/a/statistics/'+args[1], function (status) {
+page.onConsoleMessage = function(msg, lineNum, sourceId) {
+  console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
+};
 
+page.onError = function(msg, trace) {
+  var msgStack = ['ERROR: ' + msg];
+  if (trace && trace.length) {
+    msgStack.push('TRACE:');
+    trace.forEach(function(t) {
+      msgStack.push(' -> ' + t.file + ': ' + t.line + (t.function ? ' (in function "' + t.function +'")' : ''));
+    });
+  }
+
+  console.error(msgStack.join('\n'));
+};
+
+// http://phantomjs.org/api/webpage/handler/on-resource-error.html
+page.onResourceError = function(resourceError) {
+  console.log('Unable to load resource (#' + resourceError.id + ' URL:' + resourceError.url + ')');
+  console.log('Error code: ' + resourceError.errorCode + '. Description: ' + resourceError.errorString);
+};
+
+// http://phantomjs.org/api/webpage/handler/on-resource-timeout.html
+page.onResourceTimeout = function(request) {
+    console.log('Response Timeout (#' + request.id + '): ' + JSON.stringify(request));
+};
+
+page.open('https://fantasy.premierleague.com/a/statistics/' + args[1], function (status) {
+
+    console.log(page);
     if (status !== 'success') {
         console.log('Unable to access network');
     } else {

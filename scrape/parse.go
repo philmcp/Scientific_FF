@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/philmcp/Scientific_FF/models"
 	"github.com/philmcp/Scientific_FF/utils"
+	"log"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -13,7 +15,7 @@ import (
 // FFS
 func (s *Scrape) ParseFFS() models.PlayerList {
 
-	fmt.Println("Parsing FFS")
+	log.Println("Parsing FFS")
 
 	fileFFS := s.Folder + "ffs-" + fmt.Sprintf("%d", s.Config.DKID) + ".csv"
 	csv := LoadCSV(fileFFS)
@@ -29,7 +31,7 @@ func (s *Scrape) ParseFFS() models.PlayerList {
 			search := fmt.Sprintf("gw%d", s.Config.Week)
 			if index == -1 && strings.Contains(val, search) {
 				index = k
-				fmt.Printf("FFS Index is %d\n", index)
+				log.Printf("FFS Index is %d\n", index)
 			}
 			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
 		}
@@ -57,7 +59,7 @@ func (s *Scrape) ParseDK() models.PlayerList {
 	csv := LoadCSV(fileDK)
 
 	out := models.PlayerList{}
-	fmt.Println("Parsing DK")
+	log.Println("Parsing DK")
 
 	for i, v := range csv.Data {
 		if i == 0 {
@@ -80,47 +82,70 @@ func (s *Scrape) ParseDK() models.PlayerList {
 }
 
 // FPL
-func (s *Scrape) ParseFPL(page string) models.PlayerList {
+func (s *Scrape) ParseFPL() models.PlayerList {
 
-	fileFPL := s.Folder + "fpl-" + page + ".csv"
+	fileFPL := s.Folder + "fpl.csv"
 	csv := LoadCSV(fileFPL)
 
-	fmt.Println("Parsing FPL")
+	log.Println("Parsing FPL")
 	out := models.PlayerList{}
-	for _, v := range csv.Data {
+
+	fmt.Sprintf("%+v\n", csv.Data)
+	for i, v := range csv.Data {
+
+		if i == 0 {
+			continue
+		}
 
 		for k, _ := range v {
 			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
 		}
 
-		name := utils.GetLastName(mapDuplicateNames(v[0]))
+		cur := models.Player{Name: utils.GetLastName(mapDuplicateNames(v[0])), Team: v[35]}
 
-		cost, _ := strconv.ParseFloat(v[3], 64)
-		selected, _ := strconv.ParseFloat(v[4], 64)
-		form, _ := strconv.ParseFloat(v[5], 64)
-		points, _ := strconv.ParseFloat(v[6], 64)
-		data, _ := strconv.ParseFloat(v[7], 64)
+		temp := strings.Split("name,now_cost,value_form,value_season,cost_change_start,cost_change_event,cost_change_start_fall,cost_change_event_fall,selected_by_percent,form,transfers_out,transfers_in,transfers_out_event,transfers_in_event,total_points,event_points,points_per_game,minutes,goals_scored,assists,clean_sheets,goals_conceded,own_goals,penalties_saved,penalties_missed,yellow_cards,red_cards,saves,bonus,bps,influence,creativity,threat,ict_index,ea_index,team,team_strength,game_team_strength_overall,game_team_strength_attack,game_team_strength_defence,game_opp_strength_overall,game_opp_strength_attack,game_opp_strength_defence", ",")
 
-		cur := models.Player{Name: name, Team: v[1], Position: v[2], Cost: cost, Selected: selected, Form: form, Points: points}
+		fpl := models.FPL{}
+		curCol := 1
 
-		if page == "value_form" {
-			cur.ValueForm = data
-		} else if page == "transfers_out_event" {
-			cur.TransfersOutEvent = data
-		} else if page == "transfers_in_event" {
-			cur.TransfersInEvent = data
+		for j := 1; j < len(temp); j++ {
+			if j == 35 {
+				curCol++
+				continue
+			}
+
+			val, err := strconv.ParseFloat(v[curCol], 64)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			id := utils.DBToStructName(temp[j])
+
+			field := reflect.ValueOf(&fpl).Elem().FieldByName(id)
+
+			//	fmt.Printf("Setting %s (%d) to %f\n", id, j, val)
+
+			if field.CanSet() {
+				field.SetFloat(val)
+			} else {
+				fmt.Println("Cant set " + id)
+			}
+			curCol++
 		}
+
+		cur.FPL = fpl
 
 		out = append(out, cur)
 
 	}
+
 	return out
 
 }
 
 // Roto
 func (s *Scrape) ParseRoto() models.PlayerList {
-	fmt.Println("Parsing Roto")
+	log.Println("Parsing Roto")
 	fileRoto := s.Folder + "roto-players.csv"
 	csv := LoadCSV(fileRoto)
 
@@ -134,7 +159,12 @@ func (s *Scrape) ParseRoto() models.PlayerList {
 		name := utils.GetLastName(v[1])
 		team := teamRoto2DK(v[0])
 		returning := v[4] == "true"
-		cur := models.Player{Name: name, Team: team, Position: v[2], Status: v[3], ReturningFromInjury: returning}
+		cur := models.Player{Name: name, Team: team, Position: v[2],
+			Roto: models.Roto{
+				Status:              v[3],
+				ReturningFromInjury: returning,
+			},
+		}
 		out = append(out, cur)
 	}
 

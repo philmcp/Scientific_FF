@@ -23,7 +23,7 @@
 
 
     // Include the TwitterApi class.
-    require_once 'lib/TwitterApi.php';
+    require_once 'assets/lib/TwitterApi.php';
 
     // Create a TwitterApi object.
     $twitterApi = new TwitterApi($appKey, $appSecret, $appName);

@@ -1,73 +1,43 @@
 package main
 
-/* func postInjury(){
+import (
+	"fmt"
+	"github.com/philmcp/Scientific_FF/models"
+	"github.com/philmcp/Scientific_FF/utils"
+	"log"
 
-		for _, tweet := range tweets {
+	"strings"
+)
 
+func injuries() {
+	tweets := twitter.GetInjuryNews()
+
+	log.Println("============ Getting injury news!! ============ ")
+
+	for _, tweet := range tweets {
 		if !strings.Contains(tweet.Text, "#FPL") {
 			continue
 		}
 
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			if _, err := os.Stat(fmt.Sprintf("injury/output/%d.jpg", tweet.ID)); os.IsNotExist(err) {
+		check := fmt.Sprintf(config.OutputFolder+"injuries/%d.png", tweet.ID)
+		log.Println("Checking to see if exists: " + check)
+		if !utils.FileExists(check) {
 
-				fmt.Printf("Tweet %d hasnt been seen before, posting injury\n", tweet.ID)
-				inj := parseInjury(tweet.Text)
+			log.Printf("Tweet %d hasnt been seen before, posting injury\n", tweet.ID)
+			inj := models.NewInjury(tweet.Text)
 
-				// Has this player played this season?
-				name := utils.GetLastName(inj.Name)
-				isWorthyPlayer, _ := db.conn.Query("SELECT name FROM dk WHERE season = $1 AND name = $2", conf.Season, name)
-
-				if isWorthyPlayer.Next() {
-					conf.Buffer.postInjury(&inj, &tweet)
-				} else {
-					fmt.Println(name + " is NOT worthy...")
-				}
+			// Has this player played this season?
+			name := utils.GetLastName(inj.Name)
+			isWorthyPlayer, _ := db.Conn.Query("SELECT name FROM dk WHERE season = $1 AND name = $2", config.Season, name)
+			defer isWorthyPlayer.Close()
+			if isWorthyPlayer.Next() {
+				log.Println(name + " IS worthy...")
+				drawer.DrawInjury(&inj, tweet.ID)
+				buffer.Post(fmt.Sprintf("#INJURY - %s (#%s) - %s - %s #FPL #EPL", inj.Name, strings.ToUpper(inj.Team), inj.Injury, inj.Returns), fmt.Sprintf("%sinjuries/%d.png", config.RemoteLoc, tweet.ID))
+			} else {
+				log.Println(name + " IS NOT worthy...")
 			}
 		}
 
 	}
-
-	}
-}*/
-
-/*
-func (b *BufferAPI) postInjury(inj *Injury, tweet *Tweet) {
-
-	encName, err := url.Parse(inj.Name)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	encInjury, err := url.Parse(inj.Injury)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	encTeam, err := url.Parse(inj.Team)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Step 1, Generate and save the image
-	url := fmt.Sprintf(conf.RemoteLoc+"/assets/scripts/injury/image.php?data=%s,%s,%s,%s,%s,%d", encName.String(), encInjury.String(), encTeam.String(), inj.Perc, inj.Returns, tweet.ID)
-	fmt.Println("Getting " + url)
-
-	response, e := http.Get(url)
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	// Step 2, post to buffer using saved image
-	url2 := fmt.Sprintf(conf.RemoteLoc+"/assets/scripts/injury/output/%d.jpg", tweet.ID)
-	fmt.Println("Posting " + url2)
-	defer response.Body.Close()
-	fmt.Println(url)
-	if inj.Returns != "" {
-		conf.Buffer.post("#FPL Injury news: "+inj.Name+" ("+strings.ToUpper(inj.Team)+") - "+inj.Injury+" - Returns: "+inj.Returns, url2)
-	}
 }
-
-*/

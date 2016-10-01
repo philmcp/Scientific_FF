@@ -20,8 +20,8 @@ func MakeRequest(url string, method string, vals string) {
 	}
 	defer resp.Body.Close()
 
-	ioutil.ReadAll(resp.Body)
-	//	fmt.Println("response Body:", string(body))
+	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
+	log.Println("response Body:", string(bodyBuffer))
 }
 
 func WGet(url string, to string) {
