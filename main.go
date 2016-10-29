@@ -28,13 +28,14 @@ var (
 
 	// Thread stuff
 	iter  = 0
-	start = time.Now().UnixNano()
+	start = time.Now()
 )
 
 // TODO:
-// 			Create DK upload scripts
 // 			Set up cron jobs so that it posted the tweets 1hr, 2hr, 30mins before etc
-
+// Sort injury images so they appear better ("returns in hours also"")
+// Inlcude player team counts in buffer
+// NOTE WEEK 16 - games are midweek
 func main() {
 	runtime.GOMAXPROCS(12)
 
@@ -53,12 +54,43 @@ func main() {
 	buffer = api.NewBuffer(config)
 	scraper = scrape.NewScraper(config)
 	drawer = draw.NewDraw(config)
-
+	//injuries()
+	//	crunching("Saturday")
+	//gocron.Every(1).Day().At("14:31").Do(generate)
 	generate()
-	//	injuries()
-	//	conf.Twitter.getInjuryNews()
+	//	generate()
 
+	// Random
+	gocron.Every(1).Day().At("18:18").Do(randomPost1, "Tuesday")
+	gocron.Every(1).Day().At("18:18").Do(randomPost2, "Tuesday")
+
+	// Analytics
+	gocron.Every(1).Day().At("18:18").Do(analyticsInForm, "Wednesday")
+	gocron.Every(1).Day().At("18:18").Do(analyticsTransfersOut, "Thursday")
+	gocron.Every(1).Day().At("18:18").Do(analyticsTransfersIn, "Friday")
+
+	// Affiliates
+	gocron.Every(1).Day().At("14:13").Do(skybet, "Monday")
+	gocron.Every(1).Day().At("14:13").Do(fanduel, "Tuesday")
+	gocron.Every(1).Day().At("14:13").Do(ladbrokes, "Wednesday")
+	gocron.Every(1).Day().At("14:13").Do(betfair, "Thursday")
+	gocron.Every(1).Day().At("14:13").Do(netbet, "Friday")
+
+	// Gameday
+	gocron.Every(1).Day().At("10:15").Do(gameday, "Saturday")
+	//gocron.Every(1).Day().At("10:15").Do(gameday, "Sunday")
+
+	// Crunching
+	gocron.Every(1).Day().At("14:00").Do(crunching, "Saturday")
+	//	gocron.Every(1).Day().At("14:00").Do(crunching, "Saturday")
+
+	//	gocron.Every(1).Day().At("11:45").Do(crunching, "Sunday")
+
+	// Lineups
+	gocron.Every(25).Minutes().Do(lineups)
+
+	// Injuries
 	gocron.Every(30).Minutes().Do(injuries)
-	// function Start start all the pending jobs
+
 	<-gocron.Start()
 }

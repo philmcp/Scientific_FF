@@ -31,7 +31,7 @@ func (s *Scrape) ParseFFS() models.PlayerList {
 			search := fmt.Sprintf("gw%d", s.Config.Week)
 			if index == -1 && strings.Contains(val, search) {
 				index = k
-				log.Printf("FFS Index is %d\n", index)
+				log.Printf("FFS Index is %d (%s)\n", index, val)
 			}
 			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
 		}
@@ -69,10 +69,11 @@ func (s *Scrape) ParseDK() models.PlayerList {
 			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
 		}
 		i, _ := strconv.ParseFloat(strings.Replace(v[2], ".", "", -1), 64)
+		avg, _ := strconv.ParseFloat(v[4], 64)
 
 		name := utils.GetLastName(mapDuplicateNames(v[1]))
 
-		cur := models.Player{Name: name, Team: v[5], Wage: i, Position: v[0]}
+		cur := models.Player{Name: name, Team: v[5], Wage: i, Position: v[0], AvgPointsPerGame: avg}
 
 		out = append(out, cur)
 
@@ -90,7 +91,6 @@ func (s *Scrape) ParseFPL() models.PlayerList {
 	log.Println("Parsing FPL")
 	out := models.PlayerList{}
 
-	fmt.Sprintf("%+v\n", csv.Data)
 	for i, v := range csv.Data {
 
 		if i == 0 {
@@ -101,22 +101,31 @@ func (s *Scrape) ParseFPL() models.PlayerList {
 			v[k] = strings.TrimSpace(strings.Replace(v[k], "\"", "", -1))
 		}
 
-		cur := models.Player{Name: utils.GetLastName(mapDuplicateNames(v[0])), Team: v[35]}
+		cur := models.Player{Name: utils.GetLastName(mapDuplicateNames(v[0])), Team: teamFPL2DK(v[35]), OppTeam: teamFPL2DK(v[36]), IsHome: v[37] == "true"}
 
-		temp := strings.Split("name,now_cost,value_form,value_season,cost_change_start,cost_change_event,cost_change_start_fall,cost_change_event_fall,selected_by_percent,form,transfers_out,transfers_in,transfers_out_event,transfers_in_event,total_points,event_points,points_per_game,minutes,goals_scored,assists,clean_sheets,goals_conceded,own_goals,penalties_saved,penalties_missed,yellow_cards,red_cards,saves,bonus,bps,influence,creativity,threat,ict_index,ea_index,team,team_strength,game_team_strength_overall,game_team_strength_attack,game_team_strength_defence,game_opp_strength_overall,game_opp_strength_attack,game_opp_strength_defence", ",")
+		temp := strings.Split("name,now_cost,value_form,value_season,cost_change_start,cost_change_event,cost_change_start_fall,cost_change_event_fall,selected_by_percent,form,transfers_out,transfers_in,transfers_out_event,transfers_in_event,total_points,event_points,points_per_game,minutes,goals_scored,assists,clean_sheets,goals_conceded,own_goals,penalties_saved,penalties_missed,yellow_cards,red_cards,saves,bonus,bps,influence,creativity,threat,ict_index,ea_index,team,opp_team,is_home,team_strength,game_team_strength_overall,game_team_strength_attack,game_team_strength_defence,game_opp_strength_overall,game_opp_strength_attack,game_opp_strength_defence", ",")
 
 		fpl := models.FPL{}
 		curCol := 1
 
 		for j := 1; j < len(temp); j++ {
-			if j == 35 {
+			if j == 35 || j == 36 || j == 37 {
 				curCol++
 				continue
 			}
+			val := 0.0
 
-			val, err := strconv.ParseFloat(v[curCol], 64)
+			val1, err := strconv.ParseInt(v[curCol], 10, 64)
+
 			if err != nil {
-				log.Fatal(err)
+				val2, err := strconv.ParseFloat(v[curCol], 64)
+				if err != nil {
+					log.Fatal(err)
+				}
+				val = val2
+
+			} else {
+				val = float64(val1)
 			}
 
 			id := utils.DBToStructName(temp[j])
@@ -134,7 +143,6 @@ func (s *Scrape) ParseFPL() models.PlayerList {
 		}
 
 		cur.FPL = fpl
-
 		out = append(out, cur)
 
 	}

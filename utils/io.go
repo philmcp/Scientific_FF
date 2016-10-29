@@ -65,6 +65,8 @@ func ParseEncoding(str string) string {
 	str = strings.Replace(str, "í", "i", -1)
 	str = strings.Replace(str, "à", "a", -1)
 	str = strings.Replace(str, "ó", "o", -1)
+	str = strings.Replace(str, "ñ", "n", -1)
+
 	str = strings.Replace(str, "ú", "u", -1)
 	str = strings.Replace(str, "ü", "u", -1)
 	return str

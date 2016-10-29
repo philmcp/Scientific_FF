@@ -9,10 +9,12 @@ import (
 	"strings"
 )
 
-func (db *ORM) GetPlayers() models.PlayerPool {
-	rows, _ := db.Conn.Query(`SELECT dk.name, dk.team, dk.pos, status, returning_from_injury, wage, projection/max_projection as projection, selected_by_percent/max_selected as selected,  form/max_form as form, total_points/max_points as points, value_form/max_value_form as value_form,
+func (db *ORM) GetPlayers() (models.PlayerPool, float64) {
+	rows, _ := db.Conn.Query(`SELECT dk.name, dk.team, fpl.opp_team, fpl.is_home, dk.pos, status, returning_from_injury, wage, projection/max_projection as projection, selected_by_percent/max_selected as selected,  form/max_form as form, total_points/max_points as points,
 
-CASE WHEN transfers_out_event = 0 THEN 0 ELSE (transfers_in_event/transfers_out_event)/max_transfers END as transfer_ratio
+CASE WHEN transfers_out_event = 0 THEN 0 ELSE (transfers_in_event/transfers_out_event)/max_transfers END as transfer_ratio,
+ value_form/max_value_form as value_form, points_per_game/max_points_per_game as points_per_game,
+  avg_points_per_game/max_avg_points_per_game as avg_points_per_game
  FROM roto_players
 LEFT JOIN dk ON dk.week = roto_players.week AND dk.season = roto_players.season AND roto_players.name = dk.name AND roto_players.team = dk.team
 LEFT JOIN ffs ON dk.week = ffs.week AND dk.season = roto_players.season AND ffs.name = dk.name AND ffs.team = dk.team
@@ -25,8 +27,9 @@ JOIN (SELECT
 	MAX(value_form) max_value_form,
 	MAX(transfers_in_event) max_transfers_in_event,
 	MAX(transfers_out_event) max_transfers_out_event,
-
-MAX(CASE WHEN transfers_out_event = 0 THEN 0 ELSE transfers_in_event/transfers_out_event END) as max_transfers
+	MAX(points_per_game) max_points_per_game,
+MAX(CASE WHEN transfers_out_event = 0 THEN 0 ELSE transfers_in_event/transfers_out_event END) as max_transfers,
+	MAX(avg_points_per_game) max_avg_points_per_game
 	FROM roto_players
 	LEFT JOIN dk ON dk.week = roto_players.week AND dk.season = roto_players.season AND roto_players.name = dk.name AND roto_players.team = dk.team
 	LEFT JOIN ffs ON dk.week = ffs.week AND dk.season = roto_players.season AND ffs.name = dk.name AND ffs.team = dk.team
@@ -40,6 +43,7 @@ ORDER BY dk.team ASC
 	defer rows.Close()
 
 	out := models.PlayerPool{}
+	maxScore := 0.0
 
 	for pos, _ := range db.Config.Formation {
 		out[pos] = []models.Player{}
@@ -48,6 +52,8 @@ ORDER BY dk.team ASC
 		var (
 			name                  sql.NullString
 			team                  sql.NullString
+			oppTeam               sql.NullString
+			isHome                sql.NullBool
 			pos                   sql.NullString
 			status                sql.NullString
 			returning_from_injury sql.NullBool
@@ -58,42 +64,71 @@ ORDER BY dk.team ASC
 			points                sql.NullFloat64
 			value_form            sql.NullFloat64
 			transfer_ratio        sql.NullFloat64
+			pointsPerGame         sql.NullFloat64
+			avgPointsPerGame      sql.NullFloat64
 		)
 
-		rows.Scan(&name, &team, &pos, &status, &returning_from_injury, &wage, &projection, &selected, &form, &points, &value_form, &transfer_ratio)
+		rows.Scan(&name, &team, &oppTeam, &isHome, &pos, &status, &returning_from_injury, &wage, &projection, &selected, &form, &points, &value_form, &transfer_ratio, &pointsPerGame, &avgPointsPerGame)
 		cur := models.Player{
-			Name:       name.String,
-			Team:       team.String,
-			Wage:       wage.Float64,
-			Projection: projection.Float64,
-
-			Roto: models.Roto{Status: status.String, ReturningFromInjury: returning_from_injury.Bool},
+			Name:             name.String,
+			Team:             team.String,
+			OppTeam:          oppTeam.String,
+			IsHome:           isHome.Bool,
+			Wage:             wage.Float64,
+			Projection:       projection.Float64,
+			Position:         pos.String,
+			PositionRaw:      pos.String,
+			AvgPointsPerGame: avgPointsPerGame.Float64,
+			Roto:             models.Roto{Status: status.String, ReturningFromInjury: returning_from_injury.Bool},
 			FPL: models.FPL{
 				SelectedByPercent: selected.Float64,
 				Form:              form.Float64,
 				TotalPoints:       points.Float64,
 				ValueForm:         value_form.Float64,
+				PointsPerGame:     pointsPerGame.Float64,
 			},
 		}
 
-		//log.Printf("%+v\n\n", cur)
+		if cur.GetScore() > maxScore {
+			maxScore = cur.GetScore()
+		}
 
+		//log.Printf("%+v\n\n", cur)
 		// Can play multiple positions
 		if strings.Contains(pos.String, "/") {
 			spl := strings.Split(pos.String, "/")
-			out[spl[0]] = append(out[spl[0]], cur)
-			out[spl[1]] = append(out[spl[1]], cur)
+			temp := cur
+			temp.Position = spl[0]
+			out[spl[0]] = append(out[spl[0]], temp)
+
+			if temp.IsGoodUtility() {
+				out["u"] = append(out["u"], temp)
+			}
+
+			temp2 := cur
+			temp2.Position = spl[1]
+			out[spl[1]] = append(out[spl[1]], temp2)
+
+			if temp2.IsGoodUtility() {
+				out["u"] = append(out["u"], temp2)
+			}
+
 		} else {
 			out[pos.String] = append(out[pos.String], cur)
+
+			if cur.IsGoodUtility() {
+				out["u"] = append(out["u"], cur)
+			}
+
 		}
 
-		out["u"] = append(out["u"], cur)
+		// Only consider m/f players for utility
 	}
 
 	for pos, _ := range db.Config.Formation {
 		log.Printf("Player pool (%s): %d\n", pos, len(out[pos]))
 	}
 
-	return out
+	return out, maxScore
 
 }

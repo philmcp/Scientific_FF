@@ -28,12 +28,14 @@ func injuries() {
 
 			// Has this player played this season?
 			name := utils.GetLastName(inj.Name)
-			isWorthyPlayer, _ := db.Conn.Query("SELECT name FROM dk WHERE season = $1 AND name = $2", config.Season, name)
+			isWorthyPlayer, _ := db.Conn.Query(`SELECT dk.name, selected_by_percent FROM dk
+JOIN (SELECT max(selected_by_percent) selected_by_percent, name FROM fpl GROUP BY name) as fpl ON fpl.name = dk.name
+WHERE selected_by_percent > 3 AND dk.name = $1`, name)
 			defer isWorthyPlayer.Close()
 			if isWorthyPlayer.Next() {
 				log.Println(name + " IS worthy...")
 				drawer.DrawInjury(&inj, tweet.ID)
-				buffer.Post(fmt.Sprintf("#INJURY - %s (#%s) - %s - %s #FPL #EPL", inj.Name, strings.ToUpper(inj.Team), inj.Injury, inj.Returns), fmt.Sprintf("%sinjuries/%d.png", config.RemoteLoc, tweet.ID))
+				buffer.Post(fmt.Sprintf("#FPL Injury news: %s (%s), %s %s", inj.Name, inj.Injury, strings.ToLower(inj.Returns), "#"+strings.ToUpper(inj.Team)), fmt.Sprintf("%sinjuries/%d.png", config.RemoteLoc, tweet.ID))
 			} else {
 				log.Println(name + " IS NOT worthy...")
 			}

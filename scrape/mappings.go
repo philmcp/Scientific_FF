@@ -6,7 +6,31 @@ import (
 	"strings"
 )
 
+var DKTeams = map[string]bool{
+	"WHU": true,
+	"CHE": true,
+	"SUN": true,
+	"WAT": true,
+	"MID": true,
+	"WBA": true,
+	"HUL": true,
+	"ARS": true,
+	"BOU": true,
+	"LEI": true,
+	"BUR": true,
+	"MU":  true,
+	"SWA": true,
+	"EVE": true,
+	"TOT": true,
+	"STK": true,
+	"MCI": true,
+	"CRY": true,
+	"SOT": true,
+	"LIV": true,
+}
+
 func teamRoto2DK(name string) string {
+	name = strings.ToLower(name)
 	teamMapping := map[string]string{
 		"tottenham hotspur":    "TOT",
 		"west ham united":      "WHU",
@@ -14,7 +38,7 @@ func teamRoto2DK(name string) string {
 		"afc bournemouth":      "BOU",
 		"norwich":              "NOR",
 		"newcastle":            "NEW",
-		"southampton":          "SOU",
+		"southampton":          "SOT",
 		"swansea city":         "SWA",
 		"chelsea":              "CHE",
 		"watford":              "WAT",
@@ -34,17 +58,61 @@ func teamRoto2DK(name string) string {
 		"hull city":            "HUL",
 	}
 
-	if _, exist := teamMapping[strings.ToLower(name)]; !exist {
+	if _, exist := teamMapping[name]; !exist {
 		log.Fatal("Roto team name doesnt exist: " + name)
 	}
 
-	return strings.ToLower(teamMapping[strings.ToLower(name)])
+	out := strings.ToLower(teamMapping[name])
+
+	if _, exist := DKTeams[strings.ToUpper(out)]; !exist {
+		log.Fatal("DK team name doesnt exist: " + strings.ToUpper(out))
+	}
+
+	return out
+}
+
+func teamFPL2DK(name string) string {
+	teamMapping := map[string]string{
+		"sto": "stk",
+		"sou": "sot",
+		"whu": "whu",
+		"mun": "mu",
+		"cry": "cry",
+		"bou": "bou",
+		"ars": "ars",
+		"lei": "lei",
+		"stk": "stk",
+		"wba": "wba",
+		"mci": "mci",
+		"swa": "swa",
+		"hul": "hul",
+		"che": "che",
+		"tot": "tot",
+		"eve": "eve",
+		"liv": "liv",
+		"sun": "sun",
+		"mid": "mid",
+		"wat": "wat",
+		"bur": "bur",
+	}
+
+	if _, exist := teamMapping[name]; !exist {
+		log.Fatal("FPL team name doesnt exist: " + name)
+	}
+
+	out := strings.ToLower(teamMapping[name])
+
+	if _, exist := DKTeams[strings.ToUpper(out)]; !exist {
+		log.Fatal("DK team name doesnt exist: " + strings.ToUpper(out))
+	}
+
+	return out
 }
 
 func teamFFS2DK(name string) string {
 	teamMapping := map[string]string{
 		"sto": "stk",
-		"sot": "sou",
+		"sot": "sot",
 		"whm": "whu",
 		"mun": "mu",
 		"cry": "cry",
@@ -66,13 +134,17 @@ func teamFFS2DK(name string) string {
 		"bur": "bur",
 	}
 
-	if _, exist := teamMapping[name]; exist {
-		//	log.Println("Mapping " + name + " to " + teamMapping[name])
-		return teamMapping[name]
-	} else {
+	if _, exist := teamMapping[name]; !exist {
 		log.Fatal("FFS team name doesnt exist: " + name)
-		return name
 	}
+
+	out := strings.ToLower(teamMapping[name])
+
+	if _, exist := DKTeams[strings.ToUpper(out)]; !exist {
+		log.Fatal("DK team name doesnt exist: " + strings.ToUpper(out))
+	}
+
+	return out
 }
 
 func mapDuplicateNames(name string) string {

@@ -15,9 +15,11 @@ import (
 )
 
 var (
-	dpi                 = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")
-	fontDIN             = flag.String("din", "assets/fonts/DIN Condensed Bold.ttf", "filename of the ttf font")
-	fontSourceSansLight = flag.String("source sans", "assets/fonts/source-sans-pro.light.ttf", "filename of the ttf font")
+	dpi                   = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")
+	fontDIN               = flag.String("din", "assets/fonts/DIN Condensed Bold.ttf", "filename of the ttf font")
+	fontSourceSansLight   = flag.String("source sans", "assets/fonts/source-sans-pro.light.ttf", "filename of the ttf font")
+	fontSourceSansRegular = flag.String("source sans reg", "assets/fonts/source-sans-pro.regular.ttf", "filename of the ttf font")
+	fontSourceSansBold    = flag.String("source sans bold", "assets/fonts/source-sans-pro.bold.ttf", "filename of the ttf font")
 )
 
 type PixelPos struct {

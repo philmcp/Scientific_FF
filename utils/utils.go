@@ -23,3 +23,8 @@ func DBToStructName(str string) string {
 	str = strings.Replace(str, " ", "", -1)
 	return str
 }
+
+func GenerateSlug(s string) string {
+	s = strings.Replace(s, " ", "-", -1)
+	return strings.ToLower(s)
+}

@@ -28,7 +28,7 @@ func (db *ORM) LoadDK(players models.PlayerList) {
 	log.Println("Loading DK to db")
 	db.Conn.Exec("DELETE FROM dk WHERE season = $1 AND week = $2 AND dkid = $3", db.Config.Season, db.Config.Week, db.Config.DKID)
 	for _, player := range players {
-		db.Conn.Exec("INSERT INTO dk (name, team, wage, pos, season, week, dkid) VALUES ($1, $2, $3, $4, $5, $6, $7)", player.Name, player.Team, player.Wage, player.Position, db.Config.Season, db.Config.Week, db.Config.DKID)
+		db.Conn.Exec("INSERT INTO dk (name, team, wage, pos, season, week, dkid, avg_points_per_game) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", player.Name, player.Team, player.Wage, player.Position, db.Config.Season, db.Config.Week, db.Config.DKID, player.AvgPointsPerGame)
 	}
 	log.Println("Finshed loading DK to db")
 }
@@ -43,12 +43,13 @@ func (db *ORM) LoadFPL(players models.PlayerList) {
 	temp := strings.Split(cols, ",")
 
 	for _, player := range players {
-		//	fmt.Println(player.Name)
 
-		_, err := db.Conn.Exec("INSERT INTO fpl (name, team, season, week) VALUES ($1, $2, $3, $4)", player.Name, player.Team, db.Config.Season, db.Config.Week)
+		_, err := db.Conn.Exec("INSERT INTO fpl (name, team, opp_team, is_home, season, week) VALUES ($1, $2, $3, $4, $5, $6)", player.Name, player.Team, player.OppTeam, player.IsHome, db.Config.Season, db.Config.Week)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("%+v\n", player)
+			log.Println(err)
 		}
+
 		tx, err := db.Conn.Begin()
 		if err != nil {
 			log.Fatal(err)

@@ -42,8 +42,13 @@ func NewInjury(text string) Injury {
 	} else {
 		layout := "02-01-2006"
 		t, _ := time.Parse(layout, date)
+		returnDate := humanize.Time(t)
+		if strings.Contains(returnDate, "hours") {
+			ret.Returns = "Returns tomorrow (" + t.Format("02 Jan") + ")"
+		} else {
+			ret.Returns = "Returns " + returnDate + " (" + t.Format("02 Jan") + ")"
+		}
 
-		ret.Returns = "Returns " + humanize.Time(t) + " (" + t.Format("02 Jan") + ")"
 	}
 
 	perc_spl := strings.Split(spl[3], " ")

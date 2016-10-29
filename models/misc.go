@@ -1,6 +1,6 @@
 package models
 
-type Lineup struct {
+type Generated struct {
 	Team       PlayerPool
 	Projection float64
 	Wage       float64
@@ -45,8 +45,7 @@ type Configuration struct {
 	MaxWage     float64
 	Formation   map[string]int
 	Threads     float64
-	ValueJump   float64
-	MinValue    float64
+	Duration    int
 	Season      int
 	Week        int
 	DKID        int

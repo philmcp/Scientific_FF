@@ -22,11 +22,29 @@ func (api *TwitterAPI) GetInjuryNews() []models.Tweet {
 
 	log.Println("Downloading injury new from twitter")
 
-	query := "from:PremierInjuries FPL -100"
+	query := "FPL Injury Update -100 from:PremierInjuries"
 	t := &url.URL{Path: query}
 	enc := t.String()
 
-	output, err := exec.Command("php", "assets/scrape/twitter.php", api.Config.Twitter.AppKey, api.Config.Twitter.AppSecret, enc, "3").Output()
+	output, err := exec.Command("php", "assets/scrape/twitter.php", api.Config.Twitter.AppKey, api.Config.Twitter.AppSecret, enc, "5").Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return parseTweets(output)
+
+}
+
+func (api *TwitterAPI) GetLineupNews() []models.Tweet {
+
+	log.Println("Downloading lineup news from twitter")
+
+	query := "from:FFScout XI"
+	t := &url.URL{Path: query}
+	enc := t.String()
+
+	output, err := exec.Command("php", "assets/scrape/twitter.php", api.Config.Twitter.AppKey, api.Config.Twitter.AppSecret, enc, "5").Output()
 
 	if err != nil {
 		log.Fatal(err)

@@ -6,143 +6,115 @@ import (
 	"fmt"
 	"github.com/golang/freetype"
 	_ "github.com/golang/freetype/truetype"
-	"github.com/leekchan/accounting"
 	"github.com/philmcp/Scientific_FF/models"
+
+	"github.com/philmcp/Scientific_FF/utils"
 	_ "golang.org/x/image/font"
+
 	"image"
+	"image/draw"
 	"image/png"
+	"time"
 	//	"image/color"
 	"log"
 	"os"
-	"strings"
 )
 
-func (d *Draw) DrawTeam(l *models.Lineup) {
-	// Decode the JPEG data. If reading from file, create a reader with
+func (d *Draw) DrawLineup(l *models.Lineup, id int64) {
+	log.Println("Drawing lineup")
 
-	pixels := map[string][]PixelPos{
-		"gk": []PixelPos{PixelPos{616, 876}},
-		"d":  []PixelPos{PixelPos{347, 694}, PixelPos{855, 694}},
-		"m":  []PixelPos{PixelPos{404, 466}, PixelPos{813, 466}},
-		"f":  []PixelPos{PixelPos{480, 257}, PixelPos{785, 257}},
-		"u":  []PixelPos{PixelPos{1210, 144}},
+	pixelsHome := PixelPos{123, 206}
+	pixelsAway := PixelPos{125, 175}
+	pixelsTeam := PixelPos{550, 109}
+	playerDif := 31
+	//	pixelsReturns := PixelPos{640, 130}
+
+	flag.Parse()
+	rgba := loadImage("assets/images/templates/lineup.png")
+
+	awayFont := loadFont(image.White, 35, *fontSourceSansLight)
+	awayFont.SetClip(rgba.Bounds())
+	awayFont.SetDst(rgba)
+
+	homeFont := loadFont(image.White, 85, *fontDIN)
+	homeFont.SetClip(rgba.Bounds())
+	homeFont.SetDst(rgba)
+
+	teamFont := loadFont(image.White, 24, *fontSourceSansRegular)
+	teamFont.SetClip(rgba.Bounds())
+	teamFont.SetDst(rgba)
+
+	// Draw home
+	home := freetype.Pt(pixelsHome.X, pixelsHome.Y)
+	_, err := homeFont.DrawString(l.Team, home)
+
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
-	pixelsSalary := PixelPos{1267, 400}
-	pixelsWeek := PixelPos{636, 83}
-	pixelsGames := PixelPos{640, 130}
+	// Draw away
+	subtext := "vs " + l.OppTeam
+	if subtext == "vs " {
+		subtext = "Today's lineup"
+	}
 
-	//	d.resetOutput()
-	flag.Parse()
-	rgba := loadImage("assets/images/templates/pitch.png")
+	subtext += " (" + time.Now().Format("02 Jan") + ")"
 
-	blackFont := loadFont(image.Black, 48, *fontDIN)
-	blackFont.SetClip(rgba.Bounds())
-	blackFont.SetDst(rgba)
+	away := freetype.Pt(pixelsAway.X, pixelsAway.Y+80)
+	_, err = awayFont.DrawString(subtext, away)
 
-	whiteFont := loadFont(image.White, 27, *fontDIN)
-	whiteFont.SetClip(rgba.Bounds())
-	whiteFont.SetDst(rgba)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-	weekFont := loadFont(image.White, 90, *fontDIN)
-	weekFont.SetClip(rgba.Bounds())
-	weekFont.SetDst(rgba)
+	// Team
 
-	gamesFont := loadFont(image.White, 45, *fontDIN)
-	gamesFont.SetClip(rgba.Bounds())
-	gamesFont.SetDst(rgba)
+	for i, player := range l.Players {
+		cur := freetype.Pt(pixelsTeam.X, pixelsTeam.Y+(playerDif*i))
+		_, err := teamFont.DrawString(player, cur)
 
-	redFont := loadFont(image.White, 80, *fontDIN)
-	redFont.SetClip(rgba.Bounds())
-	redFont.SetDst(rgba)
-
-	salary := 0.0
-
-	// Draw the team
-	for pos, players := range l.Team {
-		i := 0
-		for _, player := range players {
-
-			playerCoor := pixels[pos][i]
-			// Player name
-			pt := freetype.Pt(playerCoor.X+7, playerCoor.Y+47)
-			_, err := blackFont.DrawString(player.GetDisplayName(), pt)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			salary += player.Wage
-			teamName := PixelPos{}
-
-			if pos == "gk" {
-				teamName.X = 118
-				teamName.Y = 89
-			} else if pos == "d" {
-				playerCoor.X += 112
-				playerCoor.Y += 60
-				teamName.X = 18
-				teamName.Y = 32
-			} else if pos == "m" {
-				playerCoor.X += 101
-				playerCoor.Y += 57
-				teamName.X = 19
-				teamName.Y = 32
-
-			} else if pos == "f" {
-				playerCoor.X += 99
-				playerCoor.Y += 57
-				teamName.X = 2
-				teamName.Y = 24
-			} else if pos == "u" {
-				playerCoor.X += 82
-				playerCoor.Y += 57
-				teamName.X = 15
-				teamName.Y = 30
-
-			}
-
-			// Team name
-			pt = freetype.Pt(playerCoor.X+teamName.X, playerCoor.Y+teamName.Y)
-			_, err = whiteFont.DrawString(strings.ToUpper(player.Team), pt)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			i++
+		if err != nil {
+			log.Println(err)
+			return
 		}
 	}
 
-	// Draw salary
-	pt := freetype.Pt(pixelsSalary.X, pixelsSalary.Y)
-	form := accounting.Accounting{Symbol: "£", Precision: 0}
-	_, err := redFont.DrawString(form.FormatMoney(salary), pt)
+	// Draw home logo
+	homeSlug := utils.GenerateSlug(l.Team)
+	fmt.Println("assets/images/logos/" + homeSlug + ".png")
+	fImg2, err := os.Open("assets/images/logos/" + homeSlug + ".png")
+	if err == nil {
+		if l.Team != "" {
+			defer fImg2.Close()
+			img2, _, _ := image.Decode(fImg2)
 
-	if err != nil {
-		log.Println(err)
-		return
-	}
+			draw.Draw(rgba, rgba.Bounds(), img2, image.Point{-120, -276}, draw.Over)
+		} else {
+			log.Println(err)
+		}
 
-	// Draw Week
-	pt = freetype.Pt(pixelsWeek.X, pixelsWeek.Y)
-	_, err = weekFont.DrawString(fmt.Sprintf("Week %d", d.Config.Week), pt)
+		// Draw away logo
 
-	if err != nil {
-		log.Println(err)
-		return
-	}
+		awaySlug := utils.GenerateSlug(l.OppTeam)
+		fmt.Println("assets/images/logos/" + awaySlug + ".png")
+		fImg2, err = os.Open("assets/images/logos/" + awaySlug + ".png")
+		if l.Team != "" && err == nil {
+			defer fImg2.Close()
+			img2, _, _ := image.Decode(fImg2)
 
-	// Draw Games
-	pt = freetype.Pt(pixelsGames.X, pixelsGames.Y)
-	_, err = gamesFont.DrawString(d.Config.DKName, pt)
-
-	if err != nil {
-		log.Println(err)
-		return
+			draw.Draw(rgba, rgba.Bounds(), img2, image.Point{-230, -276}, draw.Over)
+		} else {
+			log.Println(err)
+		}
 	}
 
 	// Save that RGBA image to disk.
-	outputLoc := d.Config.OutputFolder + "lineup.png"
+	outputLoc := d.Config.OutputFolder + fmt.Sprintf("/lineups/%d.png", id)
+	log.Println("Drawing to " + outputLoc)
+
+	os.Chmod(outputLoc, 0775)
 	//	log.Println("Drawing to " + outputLoc)
 	outFile, err := os.Create(outputLoc)
 	if err != nil {
@@ -159,5 +131,4 @@ func (d *Draw) DrawTeam(l *models.Lineup) {
 		log.Fatal(err)
 	}
 
-	//log.Println("Wrote out.png OK.")
 }

@@ -21,18 +21,18 @@ import (
 func (d *Draw) DrawInjury(l *models.Injury, id int64) {
 	log.Println("Drawing injury")
 
-	pixelsName := PixelPos{50, 290}
-	pixelsInjury := PixelPos{102, 366}
+	pixelsName := PixelPos{124, 312}
+	pixelsInjury := PixelPos{126, 360}
 	//	pixelsReturns := PixelPos{640, 130}
 
 	flag.Parse()
 	rgba := loadImage("assets/images/templates/injury.png")
 
-	injuryFont := loadFont(image.White, 32, *fontSourceSansLight)
+	injuryFont := loadFont(image.White, 30, *fontSourceSansRegular)
 	injuryFont.SetClip(rgba.Bounds())
 	injuryFont.SetDst(rgba)
 
-	nameFont := loadFont(image.White, 135, *fontDIN)
+	nameFont := loadFont(image.White, 105, *fontDIN)
 	nameFont.SetClip(rgba.Bounds())
 	nameFont.SetDst(rgba)
 
@@ -58,11 +58,14 @@ func (d *Draw) DrawInjury(l *models.Injury, id int64) {
 	}
 
 	// Draw logo
-	fImg2, _ := os.Open("assets/images/logos/" + l.Team + ".png")
-	defer fImg2.Close()
-	img2, _, _ := image.Decode(fImg2)
+	if l.Team != "" {
+		fmt.Println("assets/images/logos/" + l.Team + ".png")
+		fImg2, _ := os.Open("assets/images/logos/" + l.Team + ".png")
+		defer fImg2.Close()
+		img2, _, _ := image.Decode(fImg2)
 
-	draw.Draw(rgba, rgba.Bounds(), img2, image.Point{-890, -30}, draw.Over)
+		draw.Draw(rgba, rgba.Bounds(), img2, image.Point{-790, -105}, draw.Over)
+	}
 
 	// Save that RGBA image to disk.
 	outputLoc := d.Config.OutputFolder + fmt.Sprintf("/injuries/%d.png", id)
